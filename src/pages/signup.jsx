@@ -5,20 +5,23 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { useState } from 'react';
-import { CognitoSignUp, SignUpOtpVarify } from "../api/CognitoApi/CognitoApi";
+import { CognitoSignUp } from "../api/CognitoApi/CognitoApi";
 import { useMutation } from "react-query";
 import { toast } from 'react-toastify';
-
+import OtpVerificationModel from '../components/OtpVerificationModel/OtpVerificationModel';
 const SignUp = () => {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    
+
+    //////// open model for otp verification
+    const [ModelState , setModelState] =  useState(false); 
 
 
     ///////// Api call by react query
     const { mutateAsync: SignUpFunCall, isLoading: isLoadingSignUpFun } = useMutation(CognitoSignUp);
-    const { mutateAsync: SignUpOtpVerification, isLoading: isLoadingSignUpOtp } = useMutation(SignUpOtpVarify);
-
+    
     ////////// when click on the sign up button
     const createAccount = async () => {
         const userName = email.split('@')[0];
@@ -28,22 +31,18 @@ const SignUp = () => {
         console.log(response, "response");
         if (response.status && response.data.userSub) {
             toast.info("Please check your inbox");
-            const GetOtpPrompt = prompt("Please enter otp.");
-            if (GetOtpPrompt !== null) {
-                const otpResponse = await SignUpOtpVerification({ username: userName, userOtp: GetOtpPrompt });
-                if (otpResponse.status) {
-                    toast.success("Opt varifyed successfullly");
-                } else {
-                    toast.error(response.error.message);
-                }
-            } else {
-                toast.error("Your account not varifyed.")
-            }
+            setModelState(true);
         } else {
             toast.error(response.error.message);
         }
     }
 
+    const otpvrifyModleClose =  (message) => {
+        setModelState(false);
+        if(message !== ""){
+         toast.error(message);
+        }
+    }
 
     return (
         <>
@@ -207,6 +206,7 @@ const SignUp = () => {
                     </Grid>
                 </Grid>
             </Box>
+            {ModelState && <OtpVerificationModel handleClose={otpvrifyModleClose} open={ModelState} userName={email.split('@')[0]} />}
         </>
     )
 }
