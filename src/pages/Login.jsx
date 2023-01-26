@@ -1,15 +1,59 @@
 import { Box, Grid, Typography, TextField, Button } from '@mui/material'
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useMutation } from 'react-query'
+import { userSignIn, resendConfermationEMail } from "../api/CognitoApi/CognitoApi";
+import { toast } from 'react-toastify';
 
-
-
+import OtpVerificationModel from '../components/OtpVerificationModel/OtpVerificationModel';
 
 const Login = () => {
+
+    /////////// Here we defined the state for storing the email and password value
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+
+    //////// open model for otp verification
+    const [ModelState, setModelState] = useState(false);
+
+    ////////Here we are write the calling api function
+    const { mutateAsync: loginApiCall, isLoading: loginApiIsLoading } = useMutation(userSignIn);
+    const { mutateAsync: resendVerificationMail} = useMutation(resendConfermationEMail);
+
+
+
+    const loginAccount = async (email, password) => {
+        const response = await loginApiCall({ username: email.split("@")[0], password: password });
+        if (response.status) {
+            toast.success("Login successfully");
+        } else {
+            if (response.error.message === "User is not confirmed.") {
+                const mailApiRes = await resendVerificationMail({ username: email.split("@")[0] });
+                if (mailApiRes.status) {
+                    toast.info("Please check your mail inbox.");
+                    setModelState(true);
+                } else {
+                    toast.error(mailApiRes.error.message);
+                }
+                console.log("mailApiRes", mailApiRes);
+            } else {
+                toast.error(response.error.message);
+            }
+        }
+    }
+    /////Otp  model close
+    const otpvrifyModleClose = (message) => {
+        setModelState(false);
+        if (message !== "") {
+            toast.error(message);
+        }
+    }
+
     return (
         <>
             <Box width={"100%"} height="60px" bgcolor={"#3370FD"}>
-                 <Typography pl={5} pt={2}  variant="subtitle2" sx={{color:"#ffffff"}}>Organaise</Typography>
+                <Typography pl={5} pt={2} variant="subtitle2" sx={{ color: "#ffffff" }}>Organaise</Typography>
             </Box>
             <Box width={"100%"} height="100%" bgcolor={"#3370FD"}>
                 <Grid container id="heading_service">
@@ -27,12 +71,11 @@ const Login = () => {
                             <Typography variant="body2" mb={.5} sx={{ color: "#ffffff" }} >Email</Typography>
                             <TextField
                                 size='small'
-
                                 sx={{ width: "100%", backgroundColor: "#ffffff", borderRadius: "0px" }}
                                 id="Email_address"
-                            //label="Email Address"
-                            //value={}
-                            //onChange={}
+                                //label="Email Address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
 
                             />
                             <Typography variant="body2" mt={4} mb={.5} sx={{ color: "#ffffff" }} >Password</Typography>
@@ -40,16 +83,16 @@ const Login = () => {
                                 size='small'
                                 sx={{ width: "100%", backgroundColor: "#ffffff", borderRadius: "0px" }}
                                 id="Password"
-
-                            //label="Email Address"
-                            //value={}
-                            //onChange={}
-
+                                //label="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                             <Button
                                 variant='contained'
                                 size='small'
                                 sx={{ width: "100%", marginTop: "40px" }}
+                                onClick={() => loginAccount(email, password)}
+                                disabled={loginApiIsLoading}
                             >
                                 Login
                             </Button>
@@ -74,6 +117,13 @@ const Login = () => {
 
                 </Grid>
             </Box>
+            {ModelState &&
+                <OtpVerificationModel
+                    handleClose={otpvrifyModleClose}
+                    open={ModelState}
+                    userName={email.split('@')[0]}
+                />}
+
         </>
     )
 }
