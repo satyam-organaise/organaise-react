@@ -90,15 +90,15 @@ const setAuthenticatedUserFromCognito = () => {
 
 export const userSignIn = async ({ username, password }) => {
   try {
-   const signInData  =  await Auth.signIn({ username, password })
+    const signInData = await Auth.signIn({ username, password })
       .then((d) => {
-        return {data:d,status:true}
+        return { data: d, status: true }
         // setAuthenticatedUserFromCognito() ///// this function use as a callback
       }
-      ).catch((error)=>{
-        return {data:[],status:false ,error:error}
+      ).catch((error) => {
+        return { data: [], status: false, error: error }
       })
-      return signInData;
+    return signInData;
   }
   catch (err) {
     return { error: err, status: false }
@@ -110,6 +110,22 @@ export const resendConfermationEMail = async ({ username }) => {
   try {
     const responseData = await Auth.resendSignUp(username)
       .then((data) => {
+        return { status: true, data: data };
+      })
+      .catch((err) => { return { status: false, data: [], error: err } });
+    return responseData;
+  } catch (error) {
+    return { error: error, status: false }
+  }
+}
+
+
+/////////// Reset Password from here //////////
+export const resetPasswordFun = async ({ username, password }) => {
+  try {
+    //
+    const responseData = await Auth.forgotPassword(username)
+      .then((data) => {
         console.log({ status: true, data: data });
         return { status: true, data: data };
       })
@@ -120,4 +136,15 @@ export const resendConfermationEMail = async ({ username }) => {
   }
 }
 
+////////// otp verification with password
+export const otpWithResetPassword = async ({ username, otp, password }) => {
+
+  const responseData = await Auth.forgotPasswordSubmit(username, otp, password).then((data) => {
+    return { data: data, status: true };
+  }).catch((error) => {
+    return { data: [], status: false, error: error }
+  })
+  return responseData;
+
+}
 

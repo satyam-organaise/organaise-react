@@ -19,9 +19,7 @@ const Login = () => {
 
     ////////Here we are write the calling api function
     const { mutateAsync: loginApiCall, isLoading: loginApiIsLoading } = useMutation(userSignIn);
-    const { mutateAsync: resendVerificationMail} = useMutation(resendConfermationEMail);
-
-
+    const { mutateAsync: resendVerificationMail } = useMutation(resendConfermationEMail);
 
     const loginAccount = async (email, password) => {
         const response = await loginApiCall({ username: email.split("@")[0], password: password });
@@ -104,10 +102,16 @@ const Login = () => {
                                 }}>Forget Password </Link>
                             </Box>
                             <Box mt={3} sx={{ display: "flex", justifyContent: "center" }} >
-                                <Link to="/" style={{ color: "#fff", fontFamily: "Nunito", fontSize: "12px", textAlign: "center" }}>Don't have a Organaise account?  </Link>
+
+                                <Typography style={{
+                                    color: "#fff", fontFamily: "Nunito", fontSize: "12px",
+                                    textAlign: "center"
+                                }} variant="subtitle2" color="initial">
+                                    Don't have a Organaise account?
+                                </Typography>
                             </Box>
                             <Box mt={2} sx={{ display: "flex", justifyContent: "center" }} >
-                                <Link to="/" style={{
+                                <Link to="/signUp" style={{
                                     color: "#fff", fontFamily: "Nunito", fontSize: "12px",
                                     textAlign: "center"
                                 }}>Sign Up</Link>

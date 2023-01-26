@@ -3,29 +3,43 @@ import Papa from "papaparse";
 import React, { useCallback, useState } from 'react'
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import { useMutation } from 'react-query';
-import { SignUpOtpVarify } from "../../api/CognitoApi/CognitoApi";
+import { SignUpOtpVarify, otpWithResetPassword } from "../../api/CognitoApi/CognitoApi";
 import { toast } from 'react-toastify';
 
-const OtpVerificationModel = ({ handleClose, open, userName }) => {
+const OtpVerificationModel = ({ handleClose, open, userName, serviceType = "" }) => {
 
     /////// Model width
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
 
-    /////// Otp store state
-    const [getOtp, setOtp] = useState("");
 
+    const [getOtp, setOtp] = useState(""); /////// Otp store state
+    const [newPassword, setNewPassword] = useState(""); /////// set new password
     //////// call api for otpverification
     const { mutateAsync: SignUpOtpVerification, isLoading: isLoadingSignUpOtp } = useMutation(SignUpOtpVarify);
+    //////// change password api call
+    const { mutateAsync: updatePasswordWithOtp, isLoading: isLoadingWithUpdatePassword } = useMutation(otpWithResetPassword);
 
-    const otpVerificationFun = async (userName, GetOtpPrompt) => {
-        const otpResponse = await SignUpOtpVerification({ username: userName, userOtp: GetOtpPrompt });
-        if (otpResponse.status) {
-            toast.success("Opt varifyed successfullly");
-            handleClose("");
+
+    const otpVerificationFun = async (userName, GetOtpPrompt, newPassword, serviceType) => {
+        if (serviceType === "forgetPassword") {
+            const updatePassword = await updatePasswordWithOtp({ username: userName, otp: GetOtpPrompt, password: newPassword });
+            if (updatePassword.status) {
+                toast.success("Password update successfullly");
+                handleClose("");
+            } else {
+                toast.error(updatePassword.error.message);
+            }
         } else {
-            toast.error(otpResponse.error.message);
+            const otpResponse = await SignUpOtpVerification({ username: userName, userOtp: GetOtpPrompt });
+            if (otpResponse.status) {
+                toast.success("Opt varifyed successfullly");
+                handleClose("");
+            } else {
+                toast.error(otpResponse.error.message);
+            }
         }
+
     }
 
     return (
@@ -40,7 +54,9 @@ const OtpVerificationModel = ({ handleClose, open, userName }) => {
             >
                 <DialogTitle id="alert-dialog-title">
                     <Box display={"flex"} justifyContent="space-between">
-                        <Typography variant="subtitle2" color="#333333">Please enter OTP</Typography>
+                        <Typography variant="subtitle2" color="#333333">
+                            {serviceType === "forgetPassword" ? "Please enter otp and new password" : "Please enter OTP"}
+                        </Typography>
                         <ClearOutlinedIcon sx={{ cursor: "pointer", color: "#333333" }}
                             onClick={() => handleClose("Your otp not verifyed.")}
                         />
@@ -49,11 +65,22 @@ const OtpVerificationModel = ({ handleClose, open, userName }) => {
                 </DialogTitle>
                 <DialogContent>
                     <TextField
+                        sx={{ marginTop: "16px" }}
                         id="otp_get"
-                        label=""
+                        label="OTP"
                         value={getOtp}
                         onChange={(e) => setOtp(e.target.value)}
                     />
+                    <br />
+                    {serviceType === "forgetPassword" &&
+                        <TextField
+                            sx={{ marginTop: "16px" }}
+                            id="new_password"
+                            label="New Password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                    }
                 </DialogContent>
                 <DialogActions>
                     <Box mt={3} sx={{ display: "flex", justifyContent: "center" }}>
@@ -63,7 +90,13 @@ const OtpVerificationModel = ({ handleClose, open, userName }) => {
                         }}
                             size='large'
                             variant='contained'
-                            onClick={() => otpVerificationFun(userName, getOtp)}
+                            onClick={() => otpVerificationFun(
+                                userName,
+                                getOtp,
+                                serviceType === "forgetPassword" ? newPassword : "",
+                                serviceType === "forgetPassword" ? "forgetPassword" : ""
+                            )
+                            }
                             disabled={isLoadingSignUpOtp}
                         >
                             Verify

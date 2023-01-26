@@ -1,11 +1,44 @@
 import { Box, Grid, Typography, TextField, Button } from '@mui/material'
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { resetPasswordFun } from "../api/CognitoApi/CognitoApi";
+import { useMutation } from 'react-query';
+import { toast } from 'react-toastify';
 
-
+import OtpVerificationModel from '../components/OtpVerificationModel/OtpVerificationModel';
 
 
 const ForgetPassword = () => {
+
+    /////// Store the email 
+    const [email, setEmail] = useState("");
+
+    //////// open model for otp verification
+    const [ModelState, setModelState] = useState(false);
+
+
+    /////// Here we are call the api for reset the password //////
+    const { mutateAsync: resetPasswordFunCall, isLoading: resetPasswordIsLoading } = useMutation(resetPasswordFun);
+
+    const resetPassword = async (email) => {
+        const response = await resetPasswordFunCall({ username: email.split("@")[0] });
+        if (response.status) {
+            toast.info("Otp send in your mail please check your mail inbox ");
+            setModelState(true);
+           
+        } else {
+            toast.error(response.error.message);
+        }
+
+    }
+
+    /////Otp  model close
+    const otpvrifyModleClose = (message) => {
+        setModelState(false);
+        if (message !== "") {
+            toast.error(message);
+        }
+    }
 
     return (
         <>
@@ -33,16 +66,17 @@ const ForgetPassword = () => {
 
                                 sx={{ width: "100%", backgroundColor: "#ffffff", borderRadius: "0px" }}
                                 id="Email_address"
-                            //label="Email Address"
-                            //value={}
-                            //onChange={}
+                                //label="Email Address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
 
                             />
-                            
+
                             <Button
                                 variant='contained'
                                 size='small'
                                 sx={{ width: "100%", marginTop: "40px" }}
+                                onClick={() => resetPassword(email)}
                             >
                                 Reset Password
                             </Button>
@@ -57,7 +91,7 @@ const ForgetPassword = () => {
                                 <Link to="/" style={{ color: "#fff", fontFamily: "Nunito", fontSize: "12px", textAlign: "center" }}>Don't have a Organaise account?  </Link>
                             </Box>
                             <Box mt={2} sx={{ display: "flex", justifyContent: "center" }} >
-                                <Link to="/" style={{
+                                <Link to="/signup" style={{
                                     color: "#fff", fontFamily: "Nunito", fontSize: "15px",
                                     textAlign: "center"
                                 }}>Sign Up</Link>
@@ -67,6 +101,13 @@ const ForgetPassword = () => {
 
                 </Grid>
             </Box>
+            {ModelState &&
+                <OtpVerificationModel
+                    handleClose={otpvrifyModleClose}
+                    open={ModelState}
+                    userName={email.split('@')[0]}
+                    serviceType={"forgetPassword"}
+                />}
         </>
     )
 }
