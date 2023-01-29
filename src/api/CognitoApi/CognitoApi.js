@@ -3,6 +3,7 @@ import { Credentials } from "@aws-amplify/core";
 import appConfig from "../../Config";
 const AWS = require("aws-sdk");
 
+
 export const getAwsCredentialsFromCognito = async () => {
   AWS.config.region = appConfig.region;
   const creds = await Credentials.get();
@@ -126,7 +127,6 @@ export const resetPasswordFun = async ({ username, password }) => {
     //
     const responseData = await Auth.forgotPassword(username)
       .then((data) => {
-        console.log({ status: true, data: data });
         return { status: true, data: data };
       })
       .catch((err) => { return { status: false, data: [], error: err } });
@@ -148,3 +148,42 @@ export const otpWithResetPassword = async ({ username, otp, password }) => {
 
 }
 
+////////// Get the list of user
+const getUserAttributeByName = (user, attribute) => {
+  try {
+    return user.Attributes.filter((attr) => attr.Name === attribute)[0].Value;
+  } catch (err) {
+    //throw new Error(`Failed at getUserAttributeByName() with error: ${err}`);
+    console.log(err);
+  }
+};
+
+export const getAllUsersFromCognitoIdp = async (identityClient) => {
+  const getAWSCred = getAwsCredentialsFromCognito();
+  try {
+    const responseData = await identityClient
+      .getUsers()
+      .then((users) => {
+        const list = users.map((user) => {
+          if (getUserAttributeByName(user, 'profile') !== 'none') {
+            return {
+              label: user.Username,
+              value: user.Attributes.filter(
+                (attr) => attr.Name === 'profile'
+              )[0].Value,
+            };
+          }
+          //return false;
+        });
+        return {status:true , data:list}
+      })
+      .catch((err) => {
+        return { status: false, data: [], error: err }
+      });
+    return responseData;
+  } catch (error) {
+    return { status: "false", error: error }
+  }
+
+
+}

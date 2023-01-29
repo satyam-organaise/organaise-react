@@ -1,9 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
-
-const AWS = require("aws-sdk");
 import Auth from '@aws-amplify/auth';
+const AWS = require("aws-sdk");
 
 /**
  * @class IdentityService
