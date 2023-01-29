@@ -93,8 +93,9 @@ export const userSignIn = async ({ username, password }) => {
   try {
     const signInData = await Auth.signIn({ username, password })
       .then((d) => {
+        setAuthenticatedUserFromCognito() ///// this function create the user profile if profile is not created
         return { data: d, status: true }
-        // setAuthenticatedUserFromCognito() ///// this function use as a callback
+        
       }
       ).catch((error) => {
         return { data: [], status: false, error: error }
@@ -173,7 +174,7 @@ export const getAllUsersFromCognitoIdp = async (identityClient) => {
               )[0].Value,
             };
           }
-          //return false;
+          return user;
         });
         return {status:true , data:list}
       })

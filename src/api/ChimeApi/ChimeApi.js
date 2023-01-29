@@ -27,28 +27,28 @@ let chimeMessaging = null;
 let chimeIdentity = null;
 
 ///////// Setup the credetials
- const getAwsCredentialsFromCognito = async () => {
+const getAwsCredentialsFromCognito = async () => {
     AWS.config.region = appConfig.region;
     const creds = await Credentials.get();
     AWS.config.credentials = new AWS.Credentials(
-      creds.accessKeyId,
-      creds.secretAccessKey,
-      creds.sessionToken
+        creds.accessKeyId,
+        creds.secretAccessKey,
+        creds.sessionToken
     );
     AWS.config.credentials.needsRefresh = function () {
-      return Date.now() > creds.expiration;
+        return Date.now() > creds.expiration;
     };
-  
+
     AWS.config.credentials.refresh = function (cb) {
-      console.log("Refresh Cognito IAM Creds");
-      Auth.currentUserCredentials().then((creUserCred) => {
-        getAwsCredentialsFromCognito().then((getAwsCred) => {
-          cb();
+        console.log("Refresh Cognito IAM Creds");
+        Auth.currentUserCredentials().then((creUserCred) => {
+            getAwsCredentialsFromCognito().then((getAwsCred) => {
+                cb();
+            });
         });
-      });
     };
     return creds;
-  };
+};
 
 
 
@@ -99,7 +99,6 @@ async function createChannel(
             createMemberArn(userId);
     });
     const response = await request.promise();
-    console.log("response", response);
     return response.ChannelArn;
 }
 
@@ -131,4 +130,104 @@ async function listChannelMembershipsForAppInstanceUser(userId) {
 }
 
 
-export { createChannel, describeChannel ,listChannelMembershipsForAppInstanceUser ,getAwsCredentialsFromCognito};
+////////// Add members in a channel ////
+async function createChannelMembership(
+    channelArn,
+    memberArn,
+    userId,
+    subChannelId
+  ) {
+    const chimeBearerArn = createMemberArn(userId);
+    const params = {
+      ChannelArn: channelArn,
+      MemberArn: memberArn,
+      Type: "DEFAULT", // OPTIONS ARE: DEFAULT and HIDDEN
+      ChimeBearer: chimeBearerArn,
+      SubChannelId: subChannelId,
+    };
+  
+    const request = (await chimeMessagingClient()).createChannelMembership(
+      params
+    );
+    const response = await request.promise();
+    return response.Member;
+  }
+
+
+  ///////////////////// send message
+  async function sendChannelMessage(
+    channelArn,
+    messageContent,
+    persistence,
+    type,
+    member,
+    subChannelId,
+    options = null
+) {
+   
+    
+    const chimeBearerArn = createMemberArn(member.userId);
+    const params = {
+        ChimeBearer: chimeBearerArn,
+        ChannelArn: channelArn,
+        Content: messageContent,
+        Persistence: persistence, // Allowed types are PERSISTENT and NON_PERSISTENT
+        Type: type, // Allowed types are STANDARD and CONTROL
+        SubChannelId: subChannelId,
+    };
+    if (options && options.Metadata) {
+        params.Metadata = options.Metadata;
+    }
+
+    const request = (await chimeMessagingClient()).sendChannelMessage(params);
+    const response = await request.promise();
+    const sentMessage = {
+        response: response,
+        CreatedTimestamp: new Date(),
+        Sender: { Arn: createMemberArn(member.userId), Name: member.username },
+    };
+    return sentMessage;
+}
+
+
+////////////////////// list of channel messages
+async function listChannelMessages(
+    channelArn,
+    userId,
+    subChannelId,
+    nextToken = null
+  ) {
+    const chimeBearerArn = createMemberArn(userId);
+  
+    const params = {
+      ChannelArn: channelArn,
+      NextToken: nextToken,
+      ChimeBearer: chimeBearerArn,
+      SubChannelId: subChannelId,
+    };
+  
+    const request = (await chimeMessagingClient()).listChannelMessages(params);
+    const response = await request.promise();
+    const messageList = response.ChannelMessages;
+    messageList.sort(function (a, b) {
+      // eslint-disable-next-line no-nested-ternary
+      return a.CreatedTimestamp < b.CreatedTimestamp
+        ? -1
+        : a.CreatedTimestamp > b.CreatedTimestamp
+        ? 1
+        : 0;
+    });
+  
+    const messages = [];
+    for (let i = 0; i < messageList.length; i++) {
+      const message = messageList[i];
+      messages.push(message);
+    }
+    return { Messages: messages, NextToken: response.NextToken };
+  }
+
+
+export { createChannel, describeChannel, 
+    listChannelMembershipsForAppInstanceUser, 
+    getAwsCredentialsFromCognito,createChannelMembership ,
+    sendChannelMessage ,listChannelMessages };

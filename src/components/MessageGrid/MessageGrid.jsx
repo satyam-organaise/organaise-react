@@ -9,7 +9,10 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import InputBase from '@mui/material/InputBase';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import { createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito }
+import {
+    createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito,
+    sendChannelMessage, listChannelMessages
+}
     from "../../api/ChimeApi/ChimeApi";
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import ModelAddMemberInChannel from "../ModelAddMemberInChannel/ModelAddMemberInChannel";
@@ -18,6 +21,11 @@ import { toast } from 'react-toastify';
 
 const MessageGrid = () => {
 
+    ////////// login member data///////
+    const [member, setMember] = useState({
+        username: '',
+        userId: '',
+    });
     const [searchUser, setSearchUser] = useState("");
     //////// Here we are store user_id  ////////
     const [user_id, setUserID] = useState("");
@@ -29,7 +37,8 @@ const MessageGrid = () => {
     const [AddMemberModel, setMemberModel] = useState(false);
     //////// All users list store here //////
     const [AddAllUsers, SetAllUsersList] = useState([]);
-
+    //////// Store message Here /////////
+    const [sendingMessgeHere, setSendingMessage] = useState("");
 
     ////////// Create and store Identity service //////
     const [IdentityServiceObject] = useState(
@@ -84,20 +93,19 @@ const MessageGrid = () => {
 
     //////////When this page render then user_id store , nad channel list also load
     useEffect(() => {
+        getAwsCredentialsFromCognito();
+        IdentityServiceObject.setupClient();
         let getLoginUserName = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.LastAuthUser`);
         let selectUserData = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.${getLoginUserName}.userData`);
         let userid = (JSON.parse(selectUserData).UserAttributes.find((d) => d.Name === "profile")).Value;
         setUserID(userid)
-        getAwsCredentialsFromCognito();
-        IdentityServiceObject.setupClient();
-        console.log("1st");
+        setMember({ username: getLoginUserName, userId: userid });
     }, [])
 
     ////////// Whenn user id set then this useEffect run
     useEffect(() => {
         if (user_id !== "") {
             channelListFunction(user_id);
-            console.log("2st");
             getAllUsersFromCognitoIdp(IdentityServiceObject).then((uData) => {
                 if (uData.status) {
                     SetAllUsersList(uData.data)
@@ -110,12 +118,6 @@ const MessageGrid = () => {
             });
         }
     }, [user_id])
-
-
-    ////////// Get the all users /////////
-    // useEffect(() => {
-    //     getAllUsersFromCognitoIdp(identityService);
-    // }, [identityService])
 
     ///////This function use for creating a channel
     const CreateChannel = async () => {
@@ -148,7 +150,6 @@ const MessageGrid = () => {
 
     /////////// Get the channel list 
     const channelListFunction = async (userid) => {
-        console.log(userid, "userid");
         const userChannelMemberships = await listChannelMembershipsForAppInstanceUser(
             userid
         );
@@ -161,8 +162,18 @@ const MessageGrid = () => {
             }
         );
         setChannelList(userChannelList);
-        console.log(userChannelList);
     }
+
+    /////////// Get the channel messaages
+    useEffect(() => {
+        if (Object.keys(ActiveChannel).length > 0) {
+            listChannelMessages(ActiveChannel.ChannelArn, user_id, undefined, null)
+        }
+    }, [ActiveChannel])
+
+    const handleChange = (event) => {
+        setSendingMessage(event.target.value);
+    };
 
     return (
         <>
@@ -262,7 +273,9 @@ const MessageGrid = () => {
                                     <Box container sx={{
                                         paddingLeft: " 7px",
                                         width: "100%", marginBottom: "7px", display: "flex", justifyContent: "left"
-                                    }} >
+                                    }}
+                                        id="reciver_message"
+                                    >
                                         <Typography
                                             variant="body2"
                                             color="secondary.dark"
@@ -279,7 +292,9 @@ const MessageGrid = () => {
                                     <Box container sx={{
                                         paddingRight: " 7px",
                                         width: "100%", marginBottom: "7px", display: "flex", justifyContent: "right"
-                                    }} >
+                                    }}
+                                        id="sender_messages"
+                                    >
                                         <Typography
                                             variant="body2"
                                             color="secondary.dark"
@@ -295,50 +310,26 @@ const MessageGrid = () => {
                                             Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi eligendi quod voluptatibus sapiente, quis fugit sed ipsum pariatur debitis totam saepe dolorem. Odio sed, ratione et nam ducimus harum fugiat.
                                         </Typography>
                                     </Box>
-                                    <Box container sx={{
-                                        paddingLeft: " 7px",
-                                        width: "100%", marginBottom: "7px", display: "flex", justifyContent: "left"
-                                    }} >
-                                        <Typography
-                                            variant="body2"
-                                            color="secondary.dark"
-                                            sx={{
-                                                backgroundColor: "#FBFBFB",
-                                                width: "60%",
-                                                borderRadius: "5px",
-                                                padding: "7px", opacity: 0.85, color: "#7A7A7A",
-                                            }}
-                                        >
-                                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi eligendi quod voluptatibus sapiente, quis fugit sed ipsum pariatur debitis totam saepe dolorem. Odio sed, ratione et nam ducimus harum fugiat.
-                                        </Typography>
-                                    </Box>
-                                    <Box container sx={{
-                                        paddingRight: " 7px",
-                                        width: "100%", marginBottom: "7px", display: "flex", justifyContent: "right"
-                                    }} >
-                                        <Typography
-                                            variant="body2"
-                                            color="secondary.dark"
-                                            sx={{
-                                                backgroundColor: "#5454D3",
-                                                width: "60%",
-                                                borderRadius: "5px",
-                                                padding: "7px",
-                                                color: "#ffffff"
 
-                                            }}
-                                        >
-                                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi eligendi quod voluptatibus sapiente, quis fugit sed ipsum pariatur debitis totam saepe dolorem. Odio sed, ratione et nam ducimus harum fugiat.
-                                        </Typography>
-                                    </Box>
                                 </Box>
-                                <Grid pb={1} pt={1} pl={1} pr={1}>
+                                <Grid pb={1} pt={1} pl={1} pr={1} id="sendMessage_input_and_add_File_icon">
                                     <Box sx={{ border: "1px solid #efefef", borderRadius: "10px", height: "40px", boxShadow: "0px 0px 10px 4px #eae7e7" }}>
+                                        <TextField
+                                            id="message_input"
+                                            label=""
+                                            value={sendingMessgeHere}
+                                            onChange={handleChange}
+
+                                        />
+
                                         <Search>
-                                            <StyledInputBase
+                                            {/* <StyledInputBase
                                                 placeholder="Search…"
                                                 inputProps={{ 'aria-label': 'search' }}
-                                            />
+                                               // value={sendingMessgeHere}
+                                                onChange={handleChange}
+                                            /> */}
+
                                             <Box
                                                 sx={{
                                                     width: "50px",
@@ -367,14 +358,18 @@ const MessageGrid = () => {
                                                         marginTop: "4px",
                                                     }}
                                                 >
-                                                    <NavigationIcon sx={{ transform: " rotate(90deg)", color: "#ffffff", fontSize: "22px" }} />
+                                                    <NavigationIcon sx={{
+                                                        transform: " rotate(90deg)", color: "#ffffff", fontSize: "22px"
+                                                    }}
+                                                        onClick={() =>
+                                                            sendChannelMessage(ActiveChannel.ChannelArn, sendingMessgeHere,
+                                                                "PERSISTENT", "STANDARD", member, undefined, null)
+                                                        }
+
+                                                    />
                                                 </Box>
-
-
                                             </Box>
-
                                         </Search>
-
                                     </Box>
                                 </Grid>
                             </>
@@ -385,7 +380,13 @@ const MessageGrid = () => {
 
                 </Grid>
             </Grid>
-            {AddMemberModel && <ModelAddMemberInChannel AddMemberModel={AddMemberModel} setMemberModel={setMemberModel} />}
+            {AddMemberModel && <ModelAddMemberInChannel
+                AddMemberModel={AddMemberModel}
+                setMemberModel={setMemberModel}
+                AddAllUsers={AddAllUsers}
+                ActiveChannel={ActiveChannel}
+                user_id={user_id}
+            />}
         </>
     )
 }
