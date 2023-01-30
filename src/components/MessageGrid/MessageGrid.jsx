@@ -39,7 +39,8 @@ const MessageGrid = () => {
     const [AddAllUsers, SetAllUsersList] = useState([]);
     //////// Store message Here /////////
     const [sendingMessgeHere, setSendingMessage] = useState("");
-
+    //////// All messges of channel  store here //////////////
+    const [AllMessagesChannel, setAllMessgesOfChannel] = useState([]);
     ////////// Create and store Identity service //////
     const [IdentityServiceObject] = useState(
         () => new IdentityService(appConfig.region, appConfig.cognitoUserPoolId)
@@ -137,7 +138,6 @@ const MessageGrid = () => {
             if (channelArn) {
                 const channel = await describeChannel(channelArn, user_id);
                 if (channel) {
-                    console.log("channel and describe the channel", channel)
                     await channelListFunction(user_id);
                 } else {
                     console.log('Error, could not retrieve channel information.');
@@ -164,12 +164,32 @@ const MessageGrid = () => {
         setChannelList(userChannelList);
     }
 
+    ////////// Send message here //////
+    const sendMessageByUser = async (ActiveChannel, sendingMessgeHere, member) => {
+        await sendChannelMessage(ActiveChannel.ChannelArn, sendingMessgeHere, "PERSISTENT", "STANDARD", member, undefined, null).then((messData) => {
+            listChannelMessages(ActiveChannel.ChannelArn, user_id, undefined, null).then((md) => {
+                setAllMessgesOfChannel(md.Messages)
+            }).catch((error) => {
+                console.log("error", error);
+            })
+        }).catch((error) => {
+            console.log("message Sending error", error)
+        })
+    }
+
     /////////// Get the channel messaages
     useEffect(() => {
         if (Object.keys(ActiveChannel).length > 0) {
-            listChannelMessages(ActiveChannel.ChannelArn, user_id, undefined, null)
+            listChannelMessages(ActiveChannel.ChannelArn, user_id, undefined, null).then((md) => {
+                setAllMessgesOfChannel(md.Messages)
+            }).catch((error) => {
+                console.log("error", error);
+            })
+
         }
     }, [ActiveChannel])
+
+
 
     const handleChange = (event) => {
         setSendingMessage(event.target.value);
@@ -270,46 +290,56 @@ const MessageGrid = () => {
                                     </Box>
                                 </Grid>
                                 <Box container sx={customScrollbar} height="100%" pt={.5} position="relative" pb={.5} overflow="auto">
-                                    <Box container sx={{
-                                        paddingLeft: " 7px",
-                                        width: "100%", marginBottom: "7px", display: "flex", justifyContent: "left"
-                                    }}
-                                        id="reciver_message"
-                                    >
-                                        <Typography
-                                            variant="body2"
-                                            color="secondary.dark"
-                                            sx={{
-                                                backgroundColor: "#FBFBFB",
-                                                width: "60%",
-                                                borderRadius: "5px",
-                                                padding: "7px", opacity: 0.85, color: "#7A7A7A",
-                                            }}
-                                        >
-                                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi eligendi quod voluptatibus sapiente, quis fugit sed ipsum pariatur debitis totam saepe dolorem. Odio sed, ratione et nam ducimus harum fugiat.
-                                        </Typography>
-                                    </Box>
-                                    <Box container sx={{
-                                        paddingRight: " 7px",
-                                        width: "100%", marginBottom: "7px", display: "flex", justifyContent: "right"
-                                    }}
-                                        id="sender_messages"
-                                    >
-                                        <Typography
-                                            variant="body2"
-                                            color="secondary.dark"
-                                            sx={{
-                                                backgroundColor: "#5454D3",
-                                                width: "60%",
-                                                borderRadius: "5px",
-                                                padding: "7px",
-                                                color: "#ffffff"
+                                    {
+                                        AllMessagesChannel.length !== 0 &&
+                                        AllMessagesChannel.map((mes) => {
+                                            if (mes.Sender.Name === member.username) {
+                                                return <Box container sx={{
+                                                    paddingRight: " 7px",
+                                                    width: "100%", marginBottom: "7px", display: "flex", justifyContent: "right"
+                                                }}
+                                                    id="sender_messages"
+                                                >
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="secondary.dark"
+                                                        sx={{
+                                                            backgroundColor: "#5454D3",
+                                                            width: "60%",
+                                                            borderRadius: "5px",
+                                                            padding: "7px",
+                                                            color: "#ffffff"
 
-                                            }}
-                                        >
-                                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi eligendi quod voluptatibus sapiente, quis fugit sed ipsum pariatur debitis totam saepe dolorem. Odio sed, ratione et nam ducimus harum fugiat.
-                                        </Typography>
-                                    </Box>
+                                                        }}
+                                                    >
+                                                        {mes.Content}
+                                                    </Typography>
+                                                </Box>
+                                            } else {
+                                                return <Box container sx={{
+                                                    paddingLeft: " 7px",
+                                                    width: "100%", marginBottom: "7px", display: "flex", justifyContent: "left"
+                                                }}
+                                                    id="reciver_message"
+                                                >
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="secondary.dark"
+                                                        sx={{
+                                                            backgroundColor: "#FBFBFB",
+                                                            width: "60%",
+                                                            borderRadius: "5px",
+                                                            padding: "7px", opacity: 0.85, color: "#7A7A7A",
+                                                        }}
+                                                    >
+                                                        {mes.Content}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        })
+                                    }
+
+
 
                                 </Box>
                                 <Grid pb={1} pt={1} pl={1} pr={1} id="sendMessage_input_and_add_File_icon">
@@ -362,10 +392,8 @@ const MessageGrid = () => {
                                                         transform: " rotate(90deg)", color: "#ffffff", fontSize: "22px"
                                                     }}
                                                         onClick={() =>
-                                                            sendChannelMessage(ActiveChannel.ChannelArn, sendingMessgeHere,
-                                                                "PERSISTENT", "STANDARD", member, undefined, null)
+                                                            sendMessageByUser(ActiveChannel, sendingMessgeHere, member)
                                                         }
-
                                                     />
                                                 </Box>
                                             </Box>

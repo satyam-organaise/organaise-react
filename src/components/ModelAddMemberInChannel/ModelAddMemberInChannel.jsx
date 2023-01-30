@@ -15,9 +15,7 @@ import {createChannelMembership} from "../../api/ChimeApi/ChimeApi"
 
 
 export default function ModelAddMemberInChannel({ AddMemberModel, setMemberModel, AddAllUsers, ActiveChannel, user_id }) {
-  //const [open, setOpen] = React.useState(false);
-  console.log(ActiveChannel, user_id);
-  console.log(AddAllUsers);
+  
   ////////// Select User Store Here /////////
   const [AddChannelUserSelect, setAddingChannelUser] = React.useState({});
 
@@ -31,7 +29,6 @@ export default function ModelAddMemberInChannel({ AddMemberModel, setMemberModel
 
   /////////// When click on the select user then this function run here
   const selectUserFun = async (user) => {
-    console.log("Select user fun run" , user);
     //const confermation =  window.confirm(`Are you sure do you want to adding ${user.lable} in the channel?`);
     const confrmation = window.confirm(`Are you sure do you want to select ${user.label} for the channel?`);
     if (!confrmation) {
@@ -44,7 +41,6 @@ export default function ModelAddMemberInChannel({ AddMemberModel, setMemberModel
 
   ///////// when click on the subscribe button
   const AddMemberButton = async (selectChannel, selectUser, user_id) => {
-    console.log(selectChannel.ChannelArn, selectUser.value, user_id);
     try {
       const membership = await createChannelMembership(
         selectChannel.ChannelArn,
