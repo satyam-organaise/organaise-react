@@ -41,6 +41,10 @@ const MessageGrid = () => {
     const [sendingMessgeHere, setSendingMessage] = useState("");
     //////// All messges of channel  store here //////////////
     const [AllMessagesChannel, setAllMessgesOfChannel] = useState([]);
+    //////// Message api call every second here ////////
+    const [count, setCount] = useState(0)
+    //////// Here store the setInterval id
+    const [messageInterval, setmessageInterval] = useState(null);
     ////////// Create and store Identity service //////
     const [IdentityServiceObject] = useState(
         () => new IdentityService(appConfig.region, appConfig.cognitoUserPoolId)
@@ -168,6 +172,7 @@ const MessageGrid = () => {
     const sendMessageByUser = async (ActiveChannel, sendingMessgeHere, member) => {
         await sendChannelMessage(ActiveChannel.ChannelArn, sendingMessgeHere, "PERSISTENT", "STANDARD", member, undefined, null).then((messData) => {
             listChannelMessages(ActiveChannel.ChannelArn, user_id, undefined, null).then((md) => {
+                setSendingMessage("");
                 setAllMessgesOfChannel(md.Messages)
             }).catch((error) => {
                 console.log("error", error);
@@ -175,22 +180,39 @@ const MessageGrid = () => {
         }).catch((error) => {
             console.log("message Sending error", error)
         })
+
     }
 
-    /////////// Get the channel messaages
+    /////////// Get the channel messaages///////
+    const GetMessagesListOnEverySec = (ActiveChannel, user_id) => {
+        listChannelMessages(ActiveChannel.ChannelArn, user_id, undefined, null).then((md) => {
+            setAllMessgesOfChannel(md.Messages)
+        }).catch((error) => {
+            console.log("error", error);
+        })
+    }
     useEffect(() => {
-        if (Object.keys(ActiveChannel).length > 0) {
-            listChannelMessages(ActiveChannel.ChannelArn, user_id, undefined, null).then((md) => {
-                setAllMessgesOfChannel(md.Messages)
-            }).catch((error) => {
-                console.log("error", error);
-            })
+        console.log("messageInterval val", messageInterval)
 
+        if (Object.keys(ActiveChannel).length > 0) {
+            clearInterval(messageInterval);
+            setAllMessgesOfChannel([]);
+            setmessageInterval(setInterval(() => {
+                GetMessagesListOnEverySec(ActiveChannel, user_id);
+            }, [3000]))
+            console.log("messageInterval", messageInterval);
         }
     }, [ActiveChannel])
 
+    // useEffect(() => {
+    //     if (Object.keys(ActiveChannel).length > 0) {
+    //         GetMessagesListOnEverySec(ActiveChannel, user_id);
+    //     }
+    // }, [count])
 
 
+
+    ///////// Here  we are set the message value
     const handleChange = (event) => {
         setSendingMessage(event.target.value);
     };
@@ -389,7 +411,8 @@ const MessageGrid = () => {
                                                     }}
                                                 >
                                                     <NavigationIcon sx={{
-                                                        transform: " rotate(90deg)", color: "#ffffff", fontSize: "22px"
+                                                        transform: " rotate(90deg)", color: "#ffffff",
+                                                        fontSize: "22px", cursor: "pointer"
                                                     }}
                                                         onClick={() =>
                                                             sendMessageByUser(ActiveChannel, sendingMessgeHere, member)

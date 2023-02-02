@@ -1,14 +1,17 @@
 import { Box, Grid, Typography, TextField, Button } from '@mui/material'
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMutation } from 'react-query'
 import { userSignIn, resendConfermationEMail } from "../api/CognitoApi/CognitoApi";
 import { toast } from 'react-toastify';
 
 import OtpVerificationModel from '../components/OtpVerificationModel/OtpVerificationModel';
 
+
+
 const Login = () => {
 
+    const navigate = useNavigate();
     /////////// Here we defined the state for storing the email and password value
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -25,6 +28,7 @@ const Login = () => {
         const response = await loginApiCall({ username: email.split("@")[0], password: password });
         if (response.status) {
             toast.success("Login successfully");
+            navigate("/");
         } else {
             if (response.error.message === "User is not confirmed.") {
                 const mailApiRes = await resendVerificationMail({ username: email.split("@")[0] });
