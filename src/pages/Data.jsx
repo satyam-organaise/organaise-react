@@ -7,10 +7,9 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import FolderIcon from '@mui/icons-material/Folder';
 
 
-const Data = ({ theme }) => {
+const Data = ({ theme , userId}) => {
     //Index prop defiend by according to this array
     //['dashboard', 'message', 'folder', 'data', 'privacy-policy', 'settings'];
-
     const [open, setOpen] = useState(false);
     const [jsonData, setJsonData] = useState([]);
     const handleClickOpen = () => {
@@ -138,7 +137,7 @@ const Data = ({ theme }) => {
                 </Grid>
 
                 {
-                    open && <FileUploadModal open={open} handleClose={handleClose} setJsonData={setJsonData} />
+                    open && <FileUploadModal open={open} handleClose={handleClose} userId={userId} setJsonData={setJsonData} />
                 }
             </LeftSideBar>
         </>

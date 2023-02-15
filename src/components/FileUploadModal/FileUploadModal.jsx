@@ -4,7 +4,9 @@ import React, { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
-const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen }) => {
+import axios from "axios";
+import { toast } from 'react-toastify';
+const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen ,userId }) => {
     const [fileGet, setFile] = useState();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
@@ -14,9 +16,7 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen }) =>
         acceptedFiles.forEach((file) => {
             { setFile(file) }
             { console.log(file) }
-
         })
-
     }, [])
 
     const {
@@ -34,6 +34,26 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen }) =>
             },
         });
     };
+
+
+    const uploadFileData = async (fileGet) => {
+        let fileData = fileGet;
+        const formData = new FormData();
+        formData.append('fileData', fileData);
+        formData.append('userId', userId);
+        formData.append('folderName', "");
+        const response = await axios.post('http://localhost:8000/api/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        if (response.statusText === "OK") {
+            toast.success(`File uploaded successfully ${response.data.Key.split(".")[0]}`);
+            handleClose();
+        } else {
+            toast.error("Something is wrong");
+        }
+    }
 
 
     return (
@@ -71,7 +91,11 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen }) =>
 
                     </div>
                     <Box mt={3} sx={{ display: "flex", justifyContent: "center" }}>
-                        <Button sx={{ paddingLeft: "50px", paddingRight: '50px', backgroundColor: "#03CF80", textTransform: "capitalize" }} size='large' variant='contained' onClick={handleClose}>Upload Now</Button>
+                        <Button sx={{
+                            paddingLeft: "50px", paddingRight: '50px',
+                            backgroundColor: "#03CF80", textTransform: "capitalize"
+                        }}
+                            size='large' variant='contained' onClick={() => uploadFileData(fileGet)}>Upload Now</Button>
                     </Box>
                 </DialogContent>
                 <DialogActions>

@@ -42,7 +42,7 @@ function App() {
   const navigate = useNavigate();
   const [isAnonymous, setAnonymous] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
- 
+  const [userId, setUserId] = useState("")
 
   useEffect(() => {
     configureAmplify();
@@ -56,6 +56,7 @@ function App() {
         if (curUser.attributes?.profile === 'none') {
           setIsAuthenticated(false);
         } else {
+          setUserId(curUser.attributes.sub);
           setIsAuthenticated(true);
         }
       })
@@ -66,7 +67,7 @@ function App() {
   };
 
   useEffect(() => {
-    
+
     Auth.currentAuthenticatedUser()
       .then(setAuthenticatedUserFromCognito)
       .catch((err) => {
@@ -91,9 +92,9 @@ function App() {
           :
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/data" element={<Data />} />
+            <Route path="/data" element={<Data userId={userId} />} />
             <Route path="/message" element={<Message />} />
-            <Route path="/folder" element={<Folder />} />
+            <Route path="/folder" element={<Folder userId={userId} />} />
             {/* 
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/settings" element={<Setting />} /> 
