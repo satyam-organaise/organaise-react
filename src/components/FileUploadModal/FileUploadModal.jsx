@@ -6,7 +6,7 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import axios from "axios";
 import { toast } from 'react-toastify';
-const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen ,userId }) => {
+const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, userId }) => {
     const [fileGet, setFile] = useState();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
@@ -47,12 +47,13 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen ,user
                 'Content-Type': 'multipart/form-data'
             }
         });
-        if (response.statusText === "OK") {
+        if (response?.data?.Key) {
             toast.success(`File uploaded successfully ${response.data.Key.split(".")[0]}`);
             handleClose();
         } else {
             toast.error("Something is wrong");
         }
+
     }
 
 

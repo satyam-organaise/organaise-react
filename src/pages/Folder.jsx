@@ -123,17 +123,14 @@ const Folder = ({ userId }) => {
                     'Content-Type': 'application/json'
                 }
             });
-            if (response.statusText === "OK") {
-                const folderResponse = response.data;
+               const folderResponse = response.data;
                 if (folderResponse.status) {
                     toast.success(folderResponse.message);
                     getFoldersData(userId);
                 } else {
                     toast.error(folderResponse.message);
                 }
-            } else {
-                toast.error("Something is wrong");
-            }
+            
         }
     }
 
@@ -145,17 +142,14 @@ const Folder = ({ userId }) => {
                 'Content-Type': 'application/json'
             }
         });
-        if (response.statusText === "OK") {
-            const folderResponse = response.data;
-            if (folderResponse.status) {
-                const foldersData = folderResponse.data;
-                setFoldersData(foldersData)
-            } else {
-                toast.error(folderResponse.message);
-            }
+        const folderResponse = response.data;
+        if (folderResponse.status) {
+            const foldersData = folderResponse.data;
+            setFoldersData(foldersData)
         } else {
-            toast.error("Something is wrong");
+            toast.error(folderResponse.message);
         }
+
     }
 
     /////// Get files of this user
@@ -166,18 +160,14 @@ const Folder = ({ userId }) => {
                 'Content-Type': 'application/json'
             }
         });
-        if (response.statusText === "OK") {
-            const FilesResponse = response.data;
+          const FilesResponse = response.data;
             if (FilesResponse.status) {
                 const FilesData = FilesResponse.data;
-                console.log("filesData", FilesData)
                 setUserFiles(FilesData)
             } else {
                 toast.error(FilesResponse.message);
             }
-        } else {
-            toast.error("Something is wrong");
-        }
+        
     }
 
 
@@ -189,8 +179,8 @@ const Folder = ({ userId }) => {
                 'Content-Type': 'application/json'
             }
         });
-        if (response.statusText === "OK") {
-            const AddFilesResponse = response.data;
+
+           const AddFilesResponse = response.data;
             if (AddFilesResponse.status) {
                 toast.success(AddFilesResponse.message);
                 getFoldersData(userId);
@@ -198,9 +188,7 @@ const Folder = ({ userId }) => {
             } else {
                 toast.error(AddFilesResponse.message);
             }
-        } else {
-            toast.error("Something is wrong");
-        }
+        
     }
 
 
