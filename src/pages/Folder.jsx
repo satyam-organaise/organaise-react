@@ -48,7 +48,7 @@ const Folder = ({ userId }) => {
     const deleteFolder = async (folderData) => {
         const confarmDelete = window.confirm("R u sure do u waant to delte this  folder");
         if (confarmDelete) {
-            const response = await axios.delete('http://13.56.89.225/api/deleteFolder', { data: { folderId: folderData._id, userId: folderData.userId } }, {
+            const response = await axios.delete('https://hoogaaa.com/v1/api/deleteFolder', { data: { folderId: folderData._id, userId: folderData.userId } }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -118,7 +118,7 @@ const Folder = ({ userId }) => {
                 userId: userId
             }
 
-            const response = await axios.post('http://13.56.89.225/api/createFolder', folderData, {
+            const response = await axios.post('https://hoogaaa.com/v1/api/createFolder', folderData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -140,7 +140,7 @@ const Folder = ({ userId }) => {
     /////////////// get the folder data here  /////
     const getFoldersData = async (userId) => {
         const userID = { userId: userId }
-        const response = await axios.post('http://13.56.89.225/api/getFolders', userID, {
+        const response = await axios.post('https://hoogaaa.com/v1/api/getFolders', userID, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -161,7 +161,7 @@ const Folder = ({ userId }) => {
     /////// Get files of this user
     const getFilesOfUser = async (userId) => {
         const userID = { userId: userId }
-        const response = await axios.post('http://13.56.89.225/api/getfiles', userID, {
+        const response = await axios.post('https://hoogaaa.com/v1/api/getfiles', userID, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -184,7 +184,7 @@ const Folder = ({ userId }) => {
     ////// Add file in folder
     const addFileInFolder = async (fileId) => {
         const addFileInFolderObject = { userId: userId, folderId: selectedFolder, fileId: fileId }
-        const response = await axios.post('http://13.56.89.225/api/addFileInFolder', addFileInFolderObject, {
+        const response = await axios.post('https://hoogaaa.com/v1/api/addFileInFolder', addFileInFolderObject, {
             headers: {
                 'Content-Type': 'application/json'
             }
