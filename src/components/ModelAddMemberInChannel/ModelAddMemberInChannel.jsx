@@ -10,12 +10,12 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify';
-import {createChannelMembership} from "../../api/ChimeApi/ChimeApi"
+import { createChannelMembership } from "../../api/ChimeApi/ChimeApi"
 
 
 
 export default function ModelAddMemberInChannel({ AddMemberModel, setMemberModel, AddAllUsers, ActiveChannel, user_id }) {
-  
+
   ////////// Select User Store Here /////////
   const [AddChannelUserSelect, setAddingChannelUser] = React.useState({});
 
@@ -42,6 +42,7 @@ export default function ModelAddMemberInChannel({ AddMemberModel, setMemberModel
   ///////// when click on the subscribe button
   const AddMemberButton = async (selectChannel, selectUser, user_id) => {
     try {
+
       const membership = await createChannelMembership(
         selectChannel.ChannelArn,
         `${appConfig.appInstanceArn}/user/${selectUser.value}`,
@@ -53,6 +54,7 @@ export default function ModelAddMemberInChannel({ AddMemberModel, setMemberModel
       handleClose();
       return { status: true, data: memberships }
     } catch (err) {
+      toast.error("Something is wrong please try after some time");
       console.log("error in adding member in channel", err);
       return { status: false, error: err };
     }

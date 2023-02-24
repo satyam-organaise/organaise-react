@@ -11,12 +11,12 @@ import NavigationIcon from '@mui/icons-material/Navigation';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import {
     createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito,
-    sendChannelMessage, listChannelMessages
+    sendChannelMessage, listChannelMessages 
 }
     from "../../api/ChimeApi/ChimeApi";
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import ModelAddMemberInChannel from "../ModelAddMemberInChannel/ModelAddMemberInChannel";
-import { getAllUsersFromCognitoIdp } from "../../api/CognitoApi/CognitoApi";
+import { getAllUsersFromCognitoIdp ,setAuthenticatedUserFromCognito } from "../../api/CognitoApi/CognitoApi";
 import { toast } from 'react-toastify';
 
 const MessageGrid = () => {
@@ -45,6 +45,8 @@ const MessageGrid = () => {
     const [count, setCount] = useState(0)
     //////// Here store the setInterval id
     const [messageInterval, setmessageInterval] = useState(null);
+    ///////  Here store channel interval
+    const [ChannelInterval, setChannelInterval] = useState(null);
     ////////// Create and store Identity service //////
     const [IdentityServiceObject] = useState(
         () => new IdentityService(appConfig.region, appConfig.cognitoUserPoolId)
@@ -110,6 +112,7 @@ const MessageGrid = () => {
     ////////// Whenn user id set then this useEffect run
     useEffect(() => {
         if (user_id !== "") {
+            //setChannelInterval
             channelListFunction(user_id);
             getAllUsersFromCognitoIdp(IdentityServiceObject).then((uData) => {
                 if (uData.status) {
@@ -122,6 +125,17 @@ const MessageGrid = () => {
                 console.log("Something is wrong error get  when user list get", err);
             });
         }
+    }, [user_id]);
+
+    useEffect(() => {
+            if (user_id !== "") {
+                clearInterval(ChannelInterval);
+                setChannelList([]);
+                setChannelInterval(setInterval(() => {
+                    channelListFunction(user_id);
+                }, [3000]))
+            }
+        
     }, [user_id])
 
     ///////This function use for creating a channel
@@ -193,7 +207,6 @@ const MessageGrid = () => {
     }
     useEffect(() => {
         console.log("messageInterval val", messageInterval)
-
         if (Object.keys(ActiveChannel).length > 0) {
             clearInterval(messageInterval);
             setAllMessgesOfChannel([]);

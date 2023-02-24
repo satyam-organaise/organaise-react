@@ -58,35 +58,46 @@ export const SignUpOtpVarify = async ({ username, userOtp }) => {
 //////get the access token by this function
 //////if user id not set then user id set here
 const updateUserAttributes = async (userId) => {
+
   try {
     const user = await Auth.currentAuthenticatedUser();
-    await Auth.updateUserAttributes(user, {
+    const updateAttrApiCall =  await Auth.updateUserAttributes(user, {
       profile: userId,
     }).then((checkD) => {
       console.log("updateUserAttributes", checkD);
+      return {"updateAttribueApiCall": checkD };
     })
+    
+    const userAttrDataGet =   await Auth.userAttributes(user).then((attrData) => {
+      return  {"Attribute data": attrData}
+    }).catch((attrError) => {
+      console.log("Attribute error", attrError);
+    })
+    
+    return {updateAttrApiCall ,userAttrDataGet }
   } catch (err) {
     console.log(err);
   }
 };
 
 
-const setAuthenticatedUserFromCognito = () => {
+export const setAuthenticatedUserFromCognito = async () => {
   ///// Its return the current userInfo
-  Auth.currentUserInfo()
+  const currentUserInfoUpdate  = await Auth.currentUserInfo()
     .then(curUser => {
       const setMember = { username: curUser.username, userId: curUser.id };
       if (curUser.attributes?.profile === 'none') {
         updateUserAttributes(curUser.id);
-        return { data: setMember, authenticate: false, status: false };
+        return { data: setMember, authenticate: false, status: false ,attribute:curUser.attributes};
       } else {
-        return { data: setMember, authenticate: true, status: true };
+        return { data: setMember, authenticate: true, status: true ,attribute:curUser.attributes};
       }
     })
     .catch((err) => {
       return { error: `Failed to set authenticated user! ${err}`, status: false }
     });
   getAwsCredentialsFromCognito();
+  return currentUserInfoUpdate;
 };
 
 export const userSignIn = async ({ username, password }) => {
@@ -95,7 +106,7 @@ export const userSignIn = async ({ username, password }) => {
       .then((d) => {
         setAuthenticatedUserFromCognito() ///// this function create the user profile if profile is not created
         return { data: d, status: true }
-        
+
       }
       ).catch((error) => {
         return { data: [], status: false, error: error }
@@ -176,7 +187,7 @@ export const getAllUsersFromCognitoIdp = async (identityClient) => {
           }
           return user;
         });
-        return {status:true , data:list}
+        return { status: true, data: list }
       })
       .catch((err) => {
         return { status: false, data: [], error: err }

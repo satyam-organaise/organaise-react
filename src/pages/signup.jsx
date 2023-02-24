@@ -13,22 +13,21 @@ const SignUp = () => {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    
+
 
     //////// open model for otp verification
-    const [ModelState , setModelState] =  useState(false); 
+    const [ModelState, setModelState] = useState(false);
 
 
     ///////// Api call by react query
     const { mutateAsync: SignUpFunCall, isLoading: isLoadingSignUpFun } = useMutation(CognitoSignUp);
-    
+
     ////////// when click on the sign up button
     const createAccount = async () => {
         const userName = email.split('@')[0];
         const userEmail = email;
         const userPassword = password;
         const response = await SignUpFunCall({ username: userName, email: userEmail, password: userPassword })
-        console.log(response, "response");
         if (response.status && response.data.userSub) {
             toast.info("Please check your inbox");
             setModelState(true);
@@ -37,10 +36,10 @@ const SignUp = () => {
         }
     }
 
-    const otpvrifyModleClose =  (message) => {
+    const otpvrifyModleClose = (message) => {
         setModelState(false);
-        if(message !== ""){
-         toast.error(message);
+        if (message !== "") {
+            toast.error(message);
         }
     }
 
@@ -206,7 +205,12 @@ const SignUp = () => {
                     </Grid>
                 </Grid>
             </Box>
-            {ModelState && <OtpVerificationModel handleClose={otpvrifyModleClose} open={ModelState} userName={email.split('@')[0]} />}
+            {ModelState && <OtpVerificationModel
+                handleClose={otpvrifyModleClose}
+                open={ModelState}
+                userName={email.split('@')[0]}
+                password={password}
+            />}
         </>
     )
 }

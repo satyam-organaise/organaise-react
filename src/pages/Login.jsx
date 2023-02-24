@@ -28,7 +28,9 @@ const Login = () => {
         const response = await loginApiCall({ username: email.split("@")[0], password: password });
         if (response.status) {
             toast.success("Login successfully");
-            navigate("/");
+            setTimeout(() => {
+                window.location = "/";
+            }, [1500])
         } else {
             if (response.error.message === "User is not confirmed.") {
                 const mailApiRes = await resendVerificationMail({ username: email.split("@")[0] });

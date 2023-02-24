@@ -150,12 +150,12 @@ const LeftSideBar = (props) => {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
-    
-    useEffect(()=>{
-        if(props?.data?.pageName === "Folder"){
+
+    useEffect(() => {
+        if (props?.data?.pageName === "Folder") {
             setOpen(!open);
         }
-    },[props.data])
+    }, [props.data])
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -176,7 +176,11 @@ const LeftSideBar = (props) => {
         setAnchorElNav(null);
     };
 
-    const handleCloseUserMenu = () => {
+    const handleCloseUserMenu = (data = "") => {
+        if (data === "Logout") {
+            localStorage.clear();
+            window.location = "/login";
+        }
         setAnchorElUser(null);
     };
 
@@ -185,7 +189,7 @@ const LeftSideBar = (props) => {
         if (indexVal === 0) {
             navegate(`/`);
         } else {
-            if(indexVal ===  2){
+            if (indexVal === 2) {
                 setOpen(!open);
             }
             navegate(`/${pagesArray[indexVal]}`);
@@ -274,10 +278,10 @@ const LeftSideBar = (props) => {
                                         horizontal: 'right',
                                     }}
                                     open={Boolean(anchorElUser)}
-                                    onClose={handleCloseUserMenu}
+                                    onClose={() => handleCloseUserMenu()}
                                 >
                                     {settings.map((setting) => (
-                                        <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                                        <MenuItem key={setting} onClick={() => handleCloseUserMenu(setting)}>
                                             <Typography textAlign="center">{setting}</Typography>
                                         </MenuItem>
                                     ))}
@@ -290,7 +294,7 @@ const LeftSideBar = (props) => {
             <Drawer
                 variant="permanent"
                 open={open}
-               
+
             >
                 <DrawerHeader >
                     <Grid
@@ -335,11 +339,11 @@ const LeftSideBar = (props) => {
                                         border: open && index === props.data.index ? "1px solid #5454D3" : "none",
                                         borderRadius: open ? "25px" : "10px",
                                         marginTop: "15px",
-                                        backgroundColor: (open && index === props.data.index )? "#5454D4" : index === props.data.index ?  "#5454D4"  :  "#fff",
-                                        color: (open && index === props.data.index) ? "#ffffff" :  index === props.data.index ? "#ffffff" : "#333333",
+                                        backgroundColor: (open && index === props.data.index) ? "#5454D4" : index === props.data.index ? "#5454D4" : "#fff",
+                                        color: (open && index === props.data.index) ? "#ffffff" : index === props.data.index ? "#ffffff" : "#333333",
                                         opacity: open && index !== props.data.index ? 0.7 : 1,
                                         "&:hover": {
-                                            backgroundColor: (open && index === props.data.index) ? "#5454D4" :  index === props.data.index  ? "#5454D3" : "#fff",
+                                            backgroundColor: (open && index === props.data.index) ? "#5454D4" : index === props.data.index ? "#5454D3" : "#fff",
 
                                         },
                                         boxShadow: open && index === props.data.index ? "0px 0px 10px 10px rgba(0, 0, 0, 0.15)" : "none",
@@ -351,7 +355,7 @@ const LeftSideBar = (props) => {
                                             minWidth: 0,
                                             mr: open ? 1 : 'auto',
                                             justifyContent: 'center',
-                                            color: (open && index === props.data.index) ? "#ffffff" :  index === props.data.index ? "#ffffff" : "#333333",
+                                            color: (open && index === props.data.index) ? "#ffffff" : index === props.data.index ? "#ffffff" : "#333333",
 
                                         }}
                                     >
@@ -372,7 +376,7 @@ const LeftSideBar = (props) => {
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
                 {/* <DrawerHeader /> */}
                 <Box mt={5.5}>
-                    
+
                     {
                         props.children
                     }

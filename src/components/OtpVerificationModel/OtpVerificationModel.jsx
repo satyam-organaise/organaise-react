@@ -3,10 +3,10 @@ import Papa from "papaparse";
 import React, { useCallback, useState } from 'react'
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import { useMutation } from 'react-query';
-import { SignUpOtpVarify, otpWithResetPassword } from "../../api/CognitoApi/CognitoApi";
+import { SignUpOtpVarify, otpWithResetPassword, userSignIn } from "../../api/CognitoApi/CognitoApi";
 import { toast } from 'react-toastify';
 
-const OtpVerificationModel = ({ handleClose, open, userName, serviceType = "" }) => {
+const OtpVerificationModel = ({ handleClose, open, userName, serviceType = "", password = "" }) => {
 
     /////// Model width
     const [fullWidth, setFullWidth] = React.useState(true);
@@ -19,7 +19,8 @@ const OtpVerificationModel = ({ handleClose, open, userName, serviceType = "" })
     const { mutateAsync: SignUpOtpVerification, isLoading: isLoadingSignUpOtp } = useMutation(SignUpOtpVarify);
     //////// change password api call
     const { mutateAsync: updatePasswordWithOtp, isLoading: isLoadingWithUpdatePassword } = useMutation(otpWithResetPassword);
-
+    ////////Here we are write the calling api function
+    const { mutateAsync: loginApiCall, isLoading: loginApiIsLoading } = useMutation(userSignIn);
 
     const otpVerificationFun = async (userName, GetOtpPrompt, newPassword, serviceType) => {
         if (serviceType === "forgetPassword") {
@@ -33,8 +34,20 @@ const OtpVerificationModel = ({ handleClose, open, userName, serviceType = "" })
         } else {
             const otpResponse = await SignUpOtpVerification({ username: userName, userOtp: GetOtpPrompt });
             if (otpResponse.status) {
-                toast.success("Opt varifyed successfullly");
-                handleClose("");
+                const response = await loginApiCall({ username: userName, password: password });
+                if (response.status) {
+                    toast.success("OTP verified successfully.Please wait we are setup your account.");
+                    setTimeout(async () => {
+                        localStorage.clear();
+                        const AgainLoginresponse = await loginApiCall({ username: userName, password: password });
+                        if (AgainLoginresponse.status) {
+                            handleClose("");
+                            setTimeout(() => {
+                                window.location = "/";
+                            }, [1000])
+                        }
+                    }, [1000])
+                }
             } else {
                 toast.error(otpResponse.error.message);
             }

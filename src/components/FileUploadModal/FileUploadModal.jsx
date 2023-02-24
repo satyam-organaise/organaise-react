@@ -42,7 +42,7 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, user
         formData.append('fileData', fileData);
         formData.append('userId', userId);
         formData.append('folderName', "");
-        const response = await axios.post('https://hoogaaa.com/v1/api/upload', formData, {
+        const response = await axios.post('https://devorganaise.com/api/upload', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
