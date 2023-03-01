@@ -57,7 +57,6 @@ function App() {
         } else {
           setUserId(curUser.attributes.sub);
           setIsAuthenticated(true);
-          navigate("/");
         }
       })
       .catch((err) => {
