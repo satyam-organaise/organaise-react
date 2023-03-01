@@ -12,7 +12,10 @@ import OtpField from 'react-otp-field';
 import { toast } from 'react-toastify';
 /////Import react query functions
 import { useMutation } from 'react-query'
-import { userSignIn, resendConfermationEMail, CognitoSignUp, SignUpOtpVarify } from "../../api/CognitoApi/CognitoApi";
+import { userSignIn, resendConfermationEMail, 
+    CognitoSignUp, SignUpOtpVarify, 
+    otpWithResetPassword, resetPasswordFun 
+} from "../../api/CognitoApi/CognitoApi";
 
 
 
@@ -85,6 +88,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
         } else {
             ////////user account created but user account not activated//////
             if (response.error.message === "User is not confirmed.") {
+                setShowVeriCon(true);
                 const mailApiRes = await resendVerificationMail({ username: email.split("@")[0] });
                 if (mailApiRes.status) {
                     toast.info("Please check your mail inbox.");
@@ -143,8 +147,38 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
         }
     }
 
+    ///////// resend otp 
+    const { mutateAsync: resetPasswordFunCall, isLoading: resetPasswordIsLoading } = useMutation(resetPasswordFun);
+    const resendOtpInMail = async (email) => {
+        const response = await resetPasswordFunCall({ username: email.split("@")[0] });
+        if (response.status) {
+            toast.info("Otp send in your mail please check your mail inbox.");
+            setShowVeriCon(true);
+        } else {
+            toast.error(response.error.message);
+        }
+    }
 
 
+
+
+    //////// change password api call or Reset password code here when user in forget passsword page 
+    const { mutateAsync: updatePasswordWithOtp } = useMutation(otpWithResetPassword);
+    const updateNewPassword = async (email, GetOtp, newPassword) => {
+        setVerifyBtnDisabled(true)
+        let userName = email.split('@')[0]
+        const updatePassword = await updatePasswordWithOtp({ username: userName, otp: GetOtp, password: newPassword });
+        if (updatePassword.status) {
+            toast.success("Password update successfullly.Please wait we are redirect in login page.");
+            setTimeout(() => {
+                setVerifyBtnDisabled(false)
+                window.location = "/login";
+            }, [3000])
+        } else {
+            toast.error(updatePassword.error.message);
+            setVerifyBtnDisabled(false)
+        }
+    }
 
     ///////Service type  change then useEffect Run
     useEffect(() => {
@@ -175,6 +209,18 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
             await createAccount(emailAddress, password);
         }
 
+        if (serviceType === "forgetPassword") {
+            if (emailAddress === "" || password === "" || confirmPassword === "") {
+                toast.error("Please fill all fields.")
+                return null;
+            }
+            if (password != confirmPassword) {
+                toast.error("Password and confirm password not matched.")
+                return null;
+            }
+            resendOtpInMail(emailAddress);
+        }
+
     }
 
     ////////// When click on the verify button
@@ -184,11 +230,15 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
             return null;
         }
         if (serviceType === "login") {
-
+            await signupVerificationOtp(emailAddress, OtpValue);
         }
 
         if (serviceType === "signup") {
-            await signupVerificationOtp(emailAddress, OtpValue)
+            await signupVerificationOtp(emailAddress, OtpValue);
+        }
+
+        if (serviceType === "forgetPassword") {
+            updateNewPassword(emailAddress, OtpValue, password)
         }
     }
 

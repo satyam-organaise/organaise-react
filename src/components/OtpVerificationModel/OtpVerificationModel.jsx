@@ -21,7 +21,6 @@ const OtpVerificationModel = ({ handleClose, open, userName, serviceType = "", p
     const { mutateAsync: updatePasswordWithOtp, isLoading: isLoadingWithUpdatePassword } = useMutation(otpWithResetPassword);
     ////////Here we are write the calling api function
     const { mutateAsync: loginApiCall, isLoading: loginApiIsLoading } = useMutation(userSignIn);
-
     const otpVerificationFun = async (userName, GetOtpPrompt, newPassword, serviceType) => {
         if (serviceType === "forgetPassword") {
             const updatePassword = await updatePasswordWithOtp({ username: userName, otp: GetOtpPrompt, password: newPassword });
