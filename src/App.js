@@ -8,15 +8,14 @@ import Folder from './pages/Folder';
 import Message from './pages/Message';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Setting from './pages/Setting';
-import Login from "./pages/Login";
+import Login from "./pages/Login"; ////// Delete this page after creating Login system in authservice Page 
 import ForgetPassword from './pages/ForgetPassword';
-import SignUp from './pages/signup';
+import SignUp from './pages/signup';/////Delete this page after creating signup system in authservice Page 
 import { useEffect } from 'react';
 import { getAwsCredentialsFromCognito } from "./api/CognitoApi/CognitoApi";
 import { Auth } from "@aws-amplify/auth";
-
 import configureAmplify from './services/servicesConfig';/////////// Here we are configure the authication of server
-
+import AuthService from './pages/AuthService';
 
 
 function App() {
@@ -58,6 +57,7 @@ function App() {
         } else {
           setUserId(curUser.attributes.sub);
           setIsAuthenticated(true);
+          navigate("/");
         }
       })
       .catch((err) => {
@@ -69,7 +69,9 @@ function App() {
   useEffect(() => {
 
     Auth.currentAuthenticatedUser()
-      .then(setAuthenticatedUserFromCognito)
+      .then((d)=>{
+        setAuthenticatedUserFromCognito();
+      })
       .catch((err) => {
         console.log("error get in app.js", err);
         setIsAuthenticated(false);
@@ -86,8 +88,9 @@ function App() {
         {!isAuthenticated
           ?
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<AuthService serviceType="login"/>} />
+            <Route path="/forget-password" element={<AuthService serviceType="forgetPassword"/>} />
+            <Route path="/signup" element={<AuthService serviceType="signup"/>} />
           </Routes>
           :
           <Routes>

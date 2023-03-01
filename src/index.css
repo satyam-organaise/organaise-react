@@ -11,3 +11,35 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.otp-field {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.otp-field__input {
+  width: 50px;
+  height: 50px;
+  box-sizing: border-box;
+  border: 0.1rem solid #aaa;
+  border-radius: 0.5rem;
+  color: #377E3F;
+  font-size: 2.5rem;
+  font-weight: 500;
+  text-align: center;
+  margin: 0px 4px;
+  border-color:#377E3F;
+
+}
+
+.otp-field__input:focus {
+  border-color:#377E3F;
+  
+}
+
+
+.otp-field__input ::-webkit-outer-spin-button,
+.otp-field__input::-webkit-inner-spin-button {
+  display: none;
+}
