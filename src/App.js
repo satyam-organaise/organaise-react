@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Typography from '@mui/material/Typography'
-import { Route, Router, Routes, useNavigate } from 'react-router-dom'
+import { Route, Router, Routes, useNavigate, useParams } from 'react-router-dom'
 import { createTheme, ThemeProvider } from '@mui/material';
 import Dashboard from './pages/Dashboard';
 import Data from './pages/Data';
@@ -19,6 +19,7 @@ import AuthService from './pages/AuthService';
 
 
 function App() {
+  const {pageType} =  useParams();
   const theme = createTheme({
     palette: {
       primary: {
@@ -57,6 +58,7 @@ function App() {
         } else {
           setUserId(curUser.attributes.sub);
           setIsAuthenticated(true);
+          navigate("/");
         }
       })
       .catch((err) => {
@@ -66,11 +68,10 @@ function App() {
   };
 
   useEffect(() => {
-
     Auth.currentAuthenticatedUser()
-      .then((d)=>{
-        setAuthenticatedUserFromCognito();
-      })
+      .then(
+        setAuthenticatedUserFromCognito
+      )
       .catch((err) => {
         console.log("error get in app.js", err);
         setIsAuthenticated(false);

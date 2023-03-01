@@ -102,7 +102,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
     ///////// when click on the signup button then code run 
     const { mutateAsync: SignUpFunCall, isLoading: isLoadingSignUpFun } = useMutation(CognitoSignUp);
-    const createAccount = async (email,password) => {
+    const createAccount = async (email, password) => {
         const userName = email.split('@')[0];
         const userEmail = email;
         const userPassword = password;
@@ -117,7 +117,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
 
     ///////// Signup otp verification/////////
-    const { mutateAsync: SignUpOtpVerification} = useMutation(SignUpOtpVarify);
+    const { mutateAsync: SignUpOtpVerification } = useMutation(SignUpOtpVarify);
     const signupVerificationOtp = async (email, getOtp) => {
         setVerifyBtnDisabled(true);
         const userName = email.split('@')[0];
@@ -154,7 +154,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
     }, [serviceType])
 
     /////////// when clickk on the button Like -  login , signup , forget password
-    const buttonAction = async(serviceType) => {
+    const buttonAction = async (serviceType) => {
         if (serviceType === "login") {
             if (emailAddress === "" || password === "") {
                 toast.error("Please fill all fields.")
@@ -172,7 +172,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                 toast.error("Password and confirm password not matched.")
                 return null;
             }
-            await createAccount(emailAddress , password);
+            await createAccount(emailAddress, password);
         }
 
     }
@@ -190,10 +190,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
         if (serviceType === "signup") {
             await signupVerificationOtp(emailAddress, OtpValue)
         }
-
     }
-
-
 
     const handleTogglePassword = () => {
         setShowPassword(!showPassword);
@@ -339,6 +336,31 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                         </Button>
 
                                     </Grid>
+                                    <Grid item xs={12} sx={cssStyle.grid_textBox_button}>
+                                        {serviceType === "login" &&
+                                            <Typography variant="subtitle2" align='center'>
+                                                I don't have account so <Link to="/signup">
+                                                    Click Here
+                                                </Link>
+                                            </Typography>
+                                        }
+                                        {serviceType === "signup" &&
+                                            <Typography variant="subtitle2" align='center'>
+                                                You have already Account so <Link to="/login">
+                                                    Click Here
+                                                </Link>
+                                            </Typography>
+                                        }
+                                        {serviceType === "forgetPassword" &&
+                                            <Typography variant="subtitle2" align='center'>
+                                                I want to login so &nbsp;<Link to="/login">
+                                                    Click Here
+                                                </Link>
+                                            </Typography>
+                                        }
+
+
+                                    </Grid>
                                 </Grid>
                             </Box>
                         </Box>
@@ -382,7 +404,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                         <Button variant="contained"
                                             sx={{
                                                 ...cssStyle.btn_textfield,
-                                                height: "50px",position:"relative",
+                                                height: "50px", position: "relative",
                                                 backgroundColor: "#225127e6",
                                                 '&:hover': {
                                                     backgroundColor: '#377E3F' // background color on hover
@@ -390,9 +412,9 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                             }}
                                             disabled={verifyBtnDisable}
                                             onClick={() => otpVerifyBtn(serviceType)}
-                                        >   
-                                        
-                                        {verifyBtnDisable && (
+                                        >
+
+                                            {verifyBtnDisable && (
                                                 <CircularProgress
                                                     size={24}
                                                     style={{
