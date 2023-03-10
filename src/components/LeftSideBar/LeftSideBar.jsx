@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { styled, useTheme, alpha } from '@mui/material/styles';
 import {
     Box, Toolbar, List, ListItem, ListItemButton, ListItemIcon, InputBase,
-    ListItemText, Grid, CssBaseline, Typography, Divider, IconButton, Tooltip, Avatar, Menu, MenuItem
+    ListItemText, Grid, CssBaseline, Typography, Divider, IconButton, Tooltip, Avatar, Menu, MenuItem,
+    Button, FormHelperText, FormControl, Select
 } from '@mui/material/';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -19,9 +20,16 @@ import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from "@mui/material/Drawer"
 import SearchIcon from '@mui/icons-material/Search';
 import CircleNotificationsOutlinedIcon from '@mui/icons-material/CircleNotificationsOutlined';
-import Button from '@mui/material/Button'
-import { Link, useNavigate } from 'react-router-dom';
 
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import PersonIcon from '@mui/icons-material/Person';
+import TextSnippetIcon from '@mui/icons-material/TextSnippet';
+import LogoutIcon from '@mui/icons-material/Logout';
+import ContentModels from '../../pages/ContentModels';
 
 
 
@@ -95,8 +103,11 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 
 const styleCss = {
     appBarCss: {
-        backgroundColor: "transparent",
+        backgroundColor: "#ffffff !important",
         boxShadow: "none",
+        borderBottom: "1px solid #efefef !important",
+        height: "65px",
+
     }
 }
 
@@ -143,13 +154,22 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 
+
 const LeftSideBar = (props) => {
     const theme = useTheme();
     const navegate = useNavigate();
+    const location = useLocation();
     const [open, setOpen] = React.useState(true);
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+    const [activePage, setActivePage] = useState("HomePage");
+
+    //////new model  open when click on the left side bar options and some others options like add folder and add teammate and so more
+    const [openNewModel, setOpenNewModel] = useState(false);
+    const [show, setShow] = useState(false);
+    const [NewModelOpen, setNewModelOpen] = useState(false);
+    const [activeModel, setActiveModel] = useState("")
 
     useEffect(() => {
         if (props?.data?.pageName === "Folder") {
@@ -197,16 +217,56 @@ const LeftSideBar = (props) => {
 
     }
 
+    ///// Show company Drop Down
+    const [age, setAge] = React.useState(10);
+
+    const handleChange = (event) => {
+        setAge(event.target.value);
+    };
 
 
+    ////// Handle  Logout function
+    const handleLogout = () => {
+        localStorage.clear();
+        window.location = "/login";
+    }
+
+    ///// navigate the page
+    const navigatePage = (NavigateNewPage) => {
+        navegate(`/${NavigateNewPage}`)
+    }
+
+    ///// Model Open function like create channel
+    const modelOpens = () => {
+        setOpenNewModel(true);/////this change the state in this page and then model show
+        setShow(true);/////active model in diffrent page
+        setActiveModel("AddChannel");/////// which type of model active
+        setNewModelOpen(true);////// Real dilog box open
+    }
+
+    //////// useLocation Check
+    useEffect(() => {
+        if (location.pathname === "/upload") {
+            setActivePage("upload");
+        }
+        if (location.pathname === "/allFiles") {
+            setActivePage("allfiles");
+        }
+        if (location.pathname === "/create-folder") {
+            setActivePage("createFolder");
+        }
+        if (location.pathname === "/mychannel") {
+            setActivePage("mychannel");
+        }
+    }, [location])
 
     return (
-        <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
-
-            <AppBar sx={styleCss.appBarCss} position="fixed" open={open}>
-                <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-                    {!open &&
+        <>
+            <Box id="main_container_box" sx={{ display: 'flex' }}>
+                <CssBaseline />
+                <AppBar sx={styleCss.appBarCss} position="fixed" open={open}>
+                    <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+                        {/* {!open &&
                         <IconButton
                             color="#333333"
                             aria-label="open drawer"
@@ -288,45 +348,231 @@ const LeftSideBar = (props) => {
                                 </Menu>
                             </Box>
                         </Box>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-            <Drawer
-                variant="permanent"
-                open={open}
+                    </Box> */}
+                    </Toolbar>
+                </AppBar>
+                <Drawer
+                    variant="permanent"
+                    open={open}
 
-            >
-                <DrawerHeader >
-                    <Grid
-                        container
-                        display="flex"
-                        justifyContent="center"
-                        sx={{ transform: "translateX(-18px)" }}
-                    >
-                        {open &&
-                            <IconButton onClick={handleDrawerClose} sx={{ padding: "12px" }}>
-                                {theme.direction === 'rtl' ?
+                >
+                    <DrawerHeader >
+                        <Grid
+                            container
+                            display="flex"
+                            justifyContent="center"
+                            sx={{ transform: "translateX(-18px)" }}
+                        >
+                            {open &&
+                                <IconButton onClick={handleDrawerClose} sx={{ padding: "12px" }}>
+                                    {/* {theme.direction === 'rtl' ?
                                     <ChevronRightIcon /> :
                                     // <ChevronLeftIcon />
                                     <MenuIcon />
-                                }
-                            </IconButton>
-                        }
+                                } */}
+                                </IconButton>
+                            }
 
-                        {open && <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: "bold", fontSize: "18px", lineHeight: 2.75 }}
-                            color="primary">Organaise</Typography>
-                        }
-                    </Grid>
-                </DrawerHeader>
-                <Divider />
-                <List sx={{
-                    paddingLeft: open ? "25px" : "5px",
-                    paddingRight: open ? "25px" : "5px"
-                }}>
-                    {/* ['Dashboard', 'Messaging', 'Folders', 'Data', 'Privacy Policy', 'Settings'] */}
-                    {['Dashboard', 'Messaging', 'Folders', 'Data'].map(
+                            {open && <Typography
+                                variant="subtitle1"
+                                sx={{ fontWeight: "bold", fontSize: "18px", lineHeight: 2.75 }}
+                                color="primary">Organaise</Typography>
+                            }
+                        </Grid>
+                    </DrawerHeader>
+                    <Divider />
+                    <FormControl sx={{ m: 1, minWidth: 120, paddingLeft: "15px", paddingRight: "15px", }}>
+                        <Select
+                            value={age}
+                            onChange={handleChange}
+                            displayEmpty
+                            inputProps={{ 'aria-label': 'Without label', }}
+                        >
+                            <MenuItem value={10}>Microsoft</MenuItem>
+                            <MenuItem value={20}>Google</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <Box id="channel_box">
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="channel-create-button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={() => navigatePage("mychannel")}
+                                variant={activePage === "mychannel" ? "contained" : "text"}
+                                size='small'
+                                sx={{
+                                    width: "100%", justifyContent: 'flex-start',
+                                    color: activePage === "mychannel" ? "#ffffff" : "#646464"
+                                }}
+                                endIcon={<KeyboardArrowDownIcon sx={{ position: "absolute", right: "10px", top: "8px" }} />}
+                            >
+                                <GroupAddIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                    Channels
+                                </span>
+                            </Button>
+                        </Box>
+                        <Box>
+                            <List sx={{ padding: "0px" }} >
+                                <ListItem sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px" }}>
+                                    <ListItemText primary={`# General`} sx={{ opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px", "& span": { fontSize: "13px", color: "#5454D4", fontWeight: 500 } }} />
+                                </ListItem>
+                                <ListItem sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px" }}>
+                                    <ListItemText primary={`# Random`} sx={{ opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" } }} />
+                                </ListItem>
+                                <ListItem
+                                    sx={{
+                                        paddingTop: "0px", paddingBottom: "0px",
+                                        paddingLeft: "58px", cursor: "pointer"
+                                    }}
+                                    onClick={() => modelOpens()}
+                                >
+                                    <AddBoxOutlinedIcon
+                                        sx={{
+                                            fontSize: "13px", marginTop: "4px", marginRight: "2px", color: "#333333b4",
+                                        }} />
+                                    <ListItemText
+                                        primary={`Add Channel`}
+                                        sx={{ opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" } }}
+                                    />
+                                </ListItem>
+                            </List>
+                        </Box>
+                    </Box>
+                    <Box id="Upload_file_box" mt={1}>
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="upload-file-button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={() => navigatePage("upload")}
+                                variant={activePage === "upload" ? "contained" : "text"}
+                                size='small'
+                                sx={{
+                                    width: "100%", justifyContent: 'flex-start',
+                                    color: activePage === "upload" ? "#ffffff" : "#646464"
+                                }}
+                            >
+                                <CloudUploadOutlinedIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                    Upload Data
+                                </span>
+                            </Button>
+                        </Box>
+                    </Box>
+                    <Box id="all_files" mt={1}>
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="all_file_button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={() => navigatePage("allFiles")}
+                                variant={activePage === "allfiles" ? "contained" : "text"}
+                                size='small'
+                                sx={{
+                                    width: "100%", justifyContent: 'flex-start',
+                                    color: activePage === "allfiles" ? "#ffffff" : "#646464"
+                                }}
+                            >
+                                <TextSnippetIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                    All files
+                                </span>
+                            </Button>
+                        </Box>
+                    </Box>
+                    <Box id="create_folder_box" mt={1}>
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="create_folder-button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={() => navigatePage("create-folder")}
+                                variant={activePage === "createFolder" ? "contained" : "text"}
+                                size='small'
+                                sx={{
+                                    width: "100%", justifyContent: 'flex-start',
+                                    color: activePage === "createFolder" ? "#ffffff" : "#646464"
+                                }}
+                            >
+                                <FolderOutlinedIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                    Create Folders
+                                </span>
+                            </Button>
+                        </Box>
+                    </Box>
+                    <Box id="my_account_box" mt={1}>
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="my-account-button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={() => navigatePage("upload")}
+                                variant="contained"
+                                size='small'
+                                disabled={true}
+                                sx={{ width: "100%", justifyContent: 'flex-start' }}
+                            >
+                                <PersonIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                    My Account
+                                </span>
+                            </Button>
+                        </Box>
+                    </Box>
+                    <Box id="settings_box" mt={1}>
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="setting-button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={() => navigatePage("upload")}
+                                variant="contained"
+                                size='small'
+                                disabled={true}
+                                sx={{ width: "100%", justifyContent: 'flex-start' }}
+                            >
+                                <SettingsOutlinedIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                    Settings
+                                </span>
+                            </Button>
+                        </Box>
+                    </Box>
+                    <Box id="logout_box" sx={{ position: "absolute", bottom: "10px", width: "100%", borderTop: "1px solid #CFCFCF", paddingTop: "20px" }} mt={1}>
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="logout-button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={handleLogout}
+                                variant="text"
+                                size='small'
+                                sx={{ width: "100%", justifyContent: 'flex-start' }}
+                            >
+                                <LogoutIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                    Logout
+                                </span>
+                            </Button>
+                        </Box>
+                    </Box>
+                    <List sx={{
+                        paddingLeft: open ? "25px" : "5px",
+                        paddingRight: open ? "25px" : "5px"
+                    }}>
+                        {/* ['Dashboard', 'Messaging', 'Folders', 'Data', 'Privacy Policy', 'Settings'] */}
+
+                        {/* {['Dashboard', 'Messaging', 'Folders', 'Data'].map(
                         (text, index) => (
                             <ListItem key={text} disablePadding px="auto" sx={{ display: 'block' }}>
                                 <ListItemButton
@@ -370,19 +616,31 @@ const LeftSideBar = (props) => {
                                     />
                                 </ListItemButton>
                             </ListItem>
-                        ))}
-                </List>
-            </Drawer>
-            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+                        ))} */}
+                    </List>
+                </Drawer>
                 {/* <DrawerHeader /> */}
-                <Box mt={5.5}>
-
-                    {
-                        props.children
-                    }
+                <Box component="main" sx={{ flexGrow: 1, py: 3, px: 0 }}>
+                    <Box mt={5.5}>
+                        {
+                            props.children
+                        }
+                    </Box>
                 </Box>
             </Box>
-        </Box>
+            {openNewModel &&
+                <ContentModels
+                    activeModel={activeModel} //////  which type of model
+                    show={show} //// boolen value of avtive  state model
+                    NewModelOpen={NewModelOpen} ///// boolean value of dialog box open
+                    setOpenNewModel={setOpenNewModel}
+                    setShow={setShow}
+                    setActiveModel={setActiveModel}
+                    setNewModelOpen={setNewModelOpen}
+
+                />
+            }
+        </>
     )
 }
 

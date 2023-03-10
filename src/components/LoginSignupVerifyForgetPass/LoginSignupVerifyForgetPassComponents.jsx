@@ -12,9 +12,10 @@ import OtpField from 'react-otp-field';
 import { toast } from 'react-toastify';
 /////Import react query functions
 import { useMutation } from 'react-query'
-import { userSignIn, resendConfermationEMail, 
-    CognitoSignUp, SignUpOtpVarify, 
-    otpWithResetPassword, resetPasswordFun 
+import {
+    userSignIn, resendConfermationEMail,
+    CognitoSignUp, SignUpOtpVarify,
+    otpWithResetPassword, resetPasswordFun
 } from "../../api/CognitoApi/CognitoApi";
 
 
@@ -136,7 +137,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                     if (AgainLoginresponse.status) {
                         setVerifyBtnDisabled(false)
                         setTimeout(() => {
-                            window.location = "/";
+                            window.location = "/companyDetail";
                         }, [1000])
                     }
                 }, [1000])
@@ -415,8 +416,6 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                             </Box>
                         </Box>
                     }
-
-
                     {/* when click on the send  otp button then this container show */}
                     {showOtpVeriCont &&
                         <Box container sx={{ ...cssStyle.content_container_box, padding: "15% 20%" }} >
@@ -484,7 +483,6 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                             </Box>
                         </Box>
                     }
-
                 </Grid>
             </Grid>
         </Box>

@@ -105,6 +105,7 @@ export const userSignIn = async ({ username, password }) => {
     const signInData = await Auth.signIn({ username, password })
       .then((d) => {
         setAuthenticatedUserFromCognito() ///// this function create the user profile if profile is not created
+        localStorage.setItem("UserData",JSON.stringify(d.attributes))
         return { data: d, status: true }
 
       }

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import Typography from '@mui/material/Typography'
-import { Route, Router, Routes, useNavigate, useParams } from 'react-router-dom'
+import { Route, Router, Routes, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { createTheme, ThemeProvider } from '@mui/material';
 import Dashboard from './pages/Dashboard';
-import Data from './pages/Data';
+import Data from './pages/Data';/////// Delete this page after creatingful design Page 
 import Folder from './pages/Folder';
 import Message from './pages/Message';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -16,14 +16,19 @@ import { getAwsCredentialsFromCognito } from "./api/CognitoApi/CognitoApi";
 import { Auth } from "@aws-amplify/auth";
 import configureAmplify from './services/servicesConfig';/////////// Here we are configure the authication of server
 import AuthService from './pages/AuthService';
-
+import FileUpload from './pages/FileUpload';
+import FolderData from './pages/FolderData';
+import MyMessage from './pages/MyMessage';
+import CompanyDetails from './pages/CompanyDetails';
+import ContentModels from './pages/ContentModels';
+import AllFiles from './pages/AllFiles';
 
 function App() {
-  const {pageType} =  useParams();
+  const { pageType } = useParams();
   const theme = createTheme({
     palette: {
       primary: {
-        main: '#5454d3',
+        main: '#448DF0',
 
       },
       secondary: {
@@ -38,7 +43,7 @@ function App() {
     },
 
   });
-
+  const location = useLocation();
   const navigate = useNavigate();
   const [isAnonymous, setAnonymous] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -58,7 +63,7 @@ function App() {
         } else {
           setUserId(curUser.attributes.sub);
           setIsAuthenticated(true);
-          navigate("/");
+          navigate(location.pathname);
         }
       })
       .catch((err) => {
@@ -75,7 +80,13 @@ function App() {
       .catch((err) => {
         console.log("error get in app.js", err);
         setIsAuthenticated(false);
-        navigate("/login");
+        if (location.pathname === "/") {
+          navigate("/login");
+        } else {
+          navigate(location.pathname);
+        }
+
+
       });
   }, [Auth]);
 
@@ -88,16 +99,23 @@ function App() {
         {!isAuthenticated
           ?
           <Routes>
-            <Route path="/login" element={<AuthService serviceType="login"/>} />
-            <Route path="/forget-password" element={<AuthService serviceType="forgetPassword"/>} />
-            <Route path="/signup" element={<AuthService serviceType="signup"/>} />
+            <Route path="/login" element={<AuthService serviceType="login" />} />
+            <Route path="/forget-password" element={<AuthService serviceType="forgetPassword" />} />
+            <Route path="/signup" element={<AuthService serviceType="signup" />} />
           </Routes>
           :
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/data" element={<Data userId={userId} />} />
-            <Route path="/message" element={<Message />} />
-            <Route path="/folder" element={<Folder userId={userId} />} />
+            <Route path="/data" element={<Data userId={userId} />} />{/** Delete code  aafter file upload feaature complete */}
+            <Route path="/message" element={<Message />} />{/** Delete code after creaing new message feature complete */}
+            <Route path="/folder" element={<Folder userId={userId} />} />{/** Delete code after folder feature complete */}
+            <Route path="/companyDetail" element={<CompanyDetails />} />
+            <Route path="/upload" element={<FileUpload />} />
+            <Route path="/create-folder" element={<FolderData userId={userId} />} />
+            <Route path="/mychannel" element={<MyMessage userId={userId} />} />
+            <Route path="/model" element={<ContentModels />} />
+            <Route path="/allFiles" element={<AllFiles />} />
+
             {/* 
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/settings" element={<Setting />} /> 

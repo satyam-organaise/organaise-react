@@ -64,7 +64,6 @@ const Data = ({ theme , userId}) => {
                         <Box p={.5} bgcolor="#fff" borderRadius="10px">
                             <LineBarsChart />
                         </Box>
-
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} id="table_and_folder_container">

@@ -46,7 +46,7 @@ const Folder = ({ userId }) => {
 
     //////// Delete Folder
     const deleteFolder = async (folderData) => {
-        const confarmDelete = window.confirm("R u sure do u waant to delte this  folder");
+        const confarmDelete = window.confirm("R u sure do u want to delte this folder.");
         if (confarmDelete) {
             const response = await axios.delete('https://devorganaise.com/api/deleteFolder', { data: { folderId: folderData._id, userId: folderData.userId } }, {
                 headers: {
