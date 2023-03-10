@@ -16,7 +16,7 @@ const CompanyDetails = () => {
             return;
         }
         const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
-        const response = await axios.post('http://localhost:8000/api/createCompany',
+        const response = await axios.post('https://devorganaise.com/api/createCompany',
             { userId: UserId, companyName: companyName },
             {
                 headers: {

@@ -30,7 +30,7 @@ const AllFiles = () => {
     /////// Get files of this user
     const getFilesOfUser = async (userId) => {
         const userID = { userId: userId }
-        const response = await axios.post('http://localhost:8000/api/getfiles', userID, {
+        const response = await axios.post('https://devorganaise.com/api/getfiles', userID, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -38,7 +38,6 @@ const AllFiles = () => {
         const FilesResponse = response.data;
         if (FilesResponse.status) {
             const FilesData = FilesResponse.data;
-            console.log(FilesData);
             setUserFiles(FilesData)
         } else {
             toast.error(FilesResponse.message);

@@ -8,10 +8,12 @@ import { toast } from 'react-toastify';
 import TextareaAutosize from '@mui/base/TextareaAutosize';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
+import { useDebounce } from 'use-debounce';
+import { useNavigate } from 'react-router-dom';
 
 
-const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, show, NewModelOpen, setNewModelOpen, getFoldersData }) => {
-
+const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, show, NewModelOpen, setNewModelOpen, getFoldersData, folderSelect }) => {
+    const navigate = useNavigate();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
 
@@ -63,7 +65,7 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                 userId: UserId
             }
 
-            const response = await axios.post('http://localhost:8000/api/createFolder', folderData, {
+            const response = await axios.post('https://devorganaise.com/api/createFolder', folderData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -81,6 +83,99 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
         }
     }
 
+
+
+    /////////////////////////////////////////////////////////////
+    ////////when add file model open then all file api call here
+    /////// Get files of this user
+    //////////////////////////////////////////////////////////////
+    const [userFiles, setUserFiles] = useState([]);
+    const getFilesOfUser = async (userId) => {
+        const userID = { userId: userId }
+        const response = await axios.post('https://devorganaise.com/api/getfiles', userID, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const FilesResponse = response.data;
+        if (FilesResponse.status) {
+            const FilesData = FilesResponse.data;
+            setUserFiles(FilesData)
+        } else {
+            toast.error(FilesResponse.message);
+        }
+
+    }
+    const callGetAllFileFun = () => {
+        const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+        if (UserId) {
+            getFilesOfUser(UserId);
+        }
+    }
+    useEffect(() => {
+        if (activeModel === "AddFileModel") {
+            callGetAllFileFun();
+        }
+    }, [activeModel])
+
+    //////////// search file by typing file name
+    const [srcFileName, setSrcFileName] = useState('');
+    const [debouncedSearchTerm] = useDebounce(srcFileName, 500);
+    useEffect(() => {
+        if (debouncedSearchTerm !== "") {
+            const searchingFiles = userFiles.filter((srcFiles) => srcFiles.fileName.toLowerCase().startsWith(debouncedSearchTerm.toLowerCase()));
+            setUserFiles(searchingFiles);
+
+        } else {
+            callGetAllFileFun();
+        }
+
+    }, [debouncedSearchTerm])
+
+    ///////// adding flie in folder first staging
+    const [selectedFile, setSelectedFile] = useState([]);
+    const addFileInFolder = (event, fileData) => {
+        if (event.target.checked) {
+            setSelectedFile([...selectedFile, fileData])
+        } else {
+            const FilterFileData = selectedFile.filter((fileD) => fileD._id !== fileData._id);
+            setSelectedFile(FilterFileData);
+        }
+    }
+
+    //////////// adding file api call here
+    ////// Add file in folder
+    const addIngFileInFolder = async (userId, fileId, selectedFolder) => {
+        const addFileInFolderObject = { userId: userId, folderId: selectedFolder, fileId: fileId }
+        const response = await axios.post('https://devorganaise.com/api/addFileInFolder', addFileInFolderObject, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const AddFilesResponse = response.data;
+        if (AddFilesResponse.status) {
+            //nothing here
+        } else {
+            toast.error(AddFilesResponse.message);
+        }
+
+    }
+
+    ///////// When click on the add file button
+    const FinalAddFileInFolder = async () => {
+        const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+        for (let index = 0; index < selectedFile.length; index++) {
+            await addIngFileInFolder(UserId, selectedFile[index], folderSelect._id);
+            if (selectedFile.length - 1 === index) {
+                toast.success("Files added successfully");
+                getFoldersData(UserId);
+                handleClose();
+            }
+        }
+
+
+    }
 
 
 
@@ -167,7 +262,7 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                 </Dialog>
             }
 
-            {/* add channel model */}
+            {/* create folder model */}
             {show && activeModel === "CreateFolder" &&
                 <Dialog
                     open={NewModelOpen}
@@ -352,25 +447,34 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                             </Box>
                         </DialogContentText>
                         <Box px={"15px"} container id="add_channel_name" mt={0}>
-                            <Box container sx={{ width: "100%" }}>
+                            <Box mb={1} mt={1.5} container sx={{ width: "100%" }}>
                                 {/* Search file code here */}
+                                <TextField
+                                    id="search_file_here"
+                                    label="Search File"
+                                    size='small'
+                                    sx={{ width: "100%" }}
+                                    value={srcFileName}
+                                    onChange={(e) => setSrcFileName(e.target.value)}
+                                />
                             </Box>
                             <Box container sx={{ width: "100%" }} mt={0}>
-                                <Box container pl={0.7}>
-                                    <FormControlLabel control={<Checkbox defaultChecked={false} sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }} />} label="Excel 1" />
-                                </Box>
-                                <Box container pl={0.7}>
-                                    <FormControlLabel control={<Checkbox defaultChecked={false} sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }} />} label="Excel 1" />
-                                </Box>
-                                <Box container pl={0.7}>
-                                    <FormControlLabel control={<Checkbox defaultChecked={false} sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }} />} label="Excel 1" />
-                                </Box>
-                                <Box container pl={0.7}>
-                                    <FormControlLabel control={<Checkbox defaultChecked={false} sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }} />} label="Excel 1" />
-                                </Box>
-                                <Box container pl={0.7}>
-                                    <FormControlLabel control={<Checkbox defaultChecked={false} sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }} />} label="Excel 1" />
-                                </Box>
+                                {userFiles.length !== 0 && userFiles.map((fd, indexFile) => (
+                                    indexFile < 5 &&
+                                    <Box key={`index_file_model_${indexFile}`} container pl={0.7}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    onChange={(e) => addFileInFolder(e, fd)}
+                                                    defaultChecked={false}
+                                                    sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }}
+                                                />
+                                            }
+                                            label={`${fd.fileName}`}
+
+                                        />
+                                    </Box>
+                                ))}
 
                             </Box>
                         </Box>
@@ -378,14 +482,24 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                     <DialogActions>
                         <Box sx={{ width: "100%" }} display={"flex"} justifyContent="space-between">
                             <Box px={"25px"} py={"15px"} sx={{ width: "100%", cursor: "pointer" }} display={"flex"}>
+
                                 <AddIcon />
-                                <Typography variant="subtitle2" >Add new file</Typography>
+                                <Typography onClick={() => navigate("/upload")} variant="subtitle2" >Add new file</Typography>
                             </Box>
                             <Box px={"15px"} py={1.5} container sx={{ width: "100%" }} gap={2} display="flex" justifyContent={"end"}>
-                                <Button variant="outlined" size='small' sx={{ padding: "5px 30px" }}>
+                                <Button
+                                    variant="outlined"
+                                    size='small'
+                                    sx={{ padding: "5px 30px" }}
+                                    onClick={() => handleClose()}>
                                     Discard
                                 </Button>
-                                <Button variant="contained" size='small' sx={{ padding: "5px 30px" }}>
+                                <Button
+                                    variant="contained"
+                                    size='small'
+                                    sx={{ padding: "5px 30px" }}
+                                    onClick={() => FinalAddFileInFolder()}
+                                >
                                     Add
                                 </Button>
                             </Box>
