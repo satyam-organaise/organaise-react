@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
     Box, Button, Dialog, DialogActions, DialogContent, DialogContentText,
-    DialogTitle, Grid, Typography, TextField, Autocomplete, FormControlLabel, FormGroup, Checkbox
+    DialogTitle, Grid, Typography, TextField, Autocomplete, FormControlLabel, FormGroup, Checkbox, Tooltip
 } from '@mui/material';
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import { toast } from 'react-toastify';
@@ -10,9 +10,22 @@ import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 import { useDebounce } from 'use-debounce';
 import { useNavigate } from 'react-router-dom';
+import CancelIcon from '@mui/icons-material/Cancel';
+import { removeFileApi } from '../api/InternalApi/OurDevApi';
 
 
-const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, show, NewModelOpen, setNewModelOpen, getFoldersData, folderSelect }) => {
+
+const ContentModels = ({
+    activeModel,
+    setActiveModel,
+    setOpenNewModel,
+    setShow,
+    show,
+    NewModelOpen,
+    setNewModelOpen,
+    getFoldersData,
+    folderSelect,
+}) => {
     const navigate = useNavigate();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
@@ -125,22 +138,35 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
         if (debouncedSearchTerm !== "") {
             const searchingFiles = userFiles.filter((srcFiles) => srcFiles.fileName.toLowerCase().startsWith(debouncedSearchTerm.toLowerCase()));
             setUserFiles(searchingFiles);
-
         } else {
             callGetAllFileFun();
         }
 
     }, [debouncedSearchTerm])
 
+    //////////////////////////////////////////////
     ///////// adding flie in folder first staging
+    //////////////////////////////////////////////
+    //// Remov the dublicate from arrayof object
+    function removeDuplicateObjectFromArray(array, key) {
+        var check = new Set();
+        return array.filter(obj => !check.has(obj[key]) && check.add(obj[key]));
+    }
+
     const [selectedFile, setSelectedFile] = useState([]);
     const addFileInFolder = (event, fileData) => {
-        if (event.target.checked) {
-            setSelectedFile([...selectedFile, fileData])
-        } else {
-            const FilterFileData = selectedFile.filter((fileD) => fileD._id !== fileData._id);
-            setSelectedFile(FilterFileData);
-        }
+        const updatedCheckboxes = userFiles.map((checkbox) => {
+            if (checkbox.fileId === fileData.fileId) {
+                return {
+                    ...checkbox,
+                    checked: !checkbox.checked,
+                };
+            }
+            return checkbox;
+        });
+        setUserFiles(updatedCheckboxes);
+        const mySelectedFies = updatedCheckboxes.filter((checkedFiles) => checkedFiles.checked === true);
+        setSelectedFile(removeDuplicateObjectFromArray([...selectedFile, ...mySelectedFies], "fileId"));/////remove the dublicaate
     }
 
     //////////// adding file api call here
@@ -165,6 +191,7 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
     ///////// When click on the add file button
     const FinalAddFileInFolder = async () => {
         const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+
         for (let index = 0; index < selectedFile.length; index++) {
             await addIngFileInFolder(UserId, selectedFile[index], folderSelect._id);
             if (selectedFile.length - 1 === index) {
@@ -173,11 +200,38 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                 handleClose();
             }
         }
-
-
     }
 
 
+    /////////////////////////////////////////////
+    /////////////// Get files in the folder//////
+    /////////////////////////////////////////////
+    const [folderFiles, setFolderFiles] = useState([]);
+    useEffect(() => {
+        if (activeModel === "ShowFilesInFolderModel") {
+            setFolderFiles(folderSelect.filesList);
+        }
+    }, [activeModel, folderSelect])
+
+    ////////// remove file from folder
+    const removeFileApiFun = async (folderId, fileData) => {
+        const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+        const createObj = { folderId: folderId, userId: UserId, fileId: fileData }
+        try {
+            const callRemoveFileApi = await removeFileApi(createObj);
+            if (callRemoveFileApi.status) {
+                const leftFilesData = folderSelect.filesList.filter((fileDa) => fileDa.fileId !== fileData.fileId);
+                setFolderFiles(leftFilesData);
+                toast.success(callRemoveFileApi.message);
+                getFoldersData(UserId);
+            } else {
+                toast.error(callRemoveFileApi.message);
+            }
+        } catch (error) {
+            toast.error("Somethig is wrong.");
+        }
+
+    }
 
 
     return (
@@ -466,12 +520,12 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                                             control={
                                                 <Checkbox
                                                     onChange={(e) => addFileInFolder(e, fd)}
-                                                    defaultChecked={false}
+                                                    checked={fd?.checked || false}
+                                                    key={`checkBox_index_${indexFile}`}
                                                     sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }}
                                                 />
                                             }
                                             label={`${fd.fileName}`}
-
                                         />
                                     </Box>
                                 ))}
@@ -482,7 +536,6 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                     <DialogActions>
                         <Box sx={{ width: "100%" }} display={"flex"} justifyContent="space-between">
                             <Box px={"25px"} py={"15px"} sx={{ width: "100%", cursor: "pointer" }} display={"flex"}>
-
                                 <AddIcon />
                                 <Typography onClick={() => navigate("/upload")} variant="subtitle2" >Add new file</Typography>
                             </Box>
@@ -500,8 +553,115 @@ const ContentModels = ({ activeModel, setActiveModel, setOpenNewModel, setShow, 
                                     sx={{ padding: "5px 30px" }}
                                     onClick={() => FinalAddFileInFolder()}
                                 >
-                                    Add
+                                    Add {selectedFile.length === 0 ? "" : selectedFile.length}
                                 </Button>
+                            </Box>
+                        </Box>
+
+                    </DialogActions>
+                </Dialog>
+            }
+
+            {/* show files in folder */}
+            {show && activeModel === "ShowFilesInFolderModel" &&
+                <Dialog
+                    open={NewModelOpen}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                    fullWidth={fullWidth}
+                    maxWidth={maxWidth}
+                    disableEscapeKeyDown={true}
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        <Box display={"flex"} justifyContent="end">
+                            <ClearOutlinedIcon sx={{
+                                cursor: "pointer",
+                                color: "#333333",
+                                fontSize: "18px",
+                                borderRadius: "50%",
+                                border: "1px solid #33333342",
+                                padding: "2px"
+                            }} onClick={() => handleClose()} />
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ paddingBottom: "0px" }}>
+                        <DialogContentText id="alert-dialog-description">
+                            <Typography variant="h6" fontWeight={"600"} color="#333333" align='center' mb={1}>Files in folder {folderSelect.folderName}</Typography>
+                            <Box>
+                                <Typography variant="subtitle2" align='center' >
+                                    {/* All files in folder ABC. */}
+                                </Typography>
+                            </Box>
+                        </DialogContentText>
+                        <Box px={"15px"} container id="add_channel_name" mt={0}>
+
+                            <Box mb={1} mt={1.5} container sx={{ width: "100%" }}>
+                                {/* Search file code here */}
+                                {folderFiles.length !== 0 &&
+                                    <TextField
+                                        id="search_file_here"
+                                        label="Search File"
+                                        size='small'
+                                        sx={{ width: "100%" }}
+                                    // value={srcFileName}
+                                    // onChange={(e) => setSrcFileName(e.target.value)}
+                                    />
+                                }
+
+                                {folderFiles.length === 0 && <Typography variant="subtitle2" color={"#820909b8"}> Files are not available in this folder. Please first add the file in this folder.</Typography>}
+                            </Box>
+                            <Box container sx={{ width: "100%" }} mt={0}>
+                                {folderFiles.length !== 0 && folderFiles.map((fd, indexFile) => (
+                                    // indexFile < 5 &&
+                                    <Box key={`index_file_model_${indexFile}`} display="flex" justifyContent={"space-between"} container pl={0.7}>
+                                        {/* <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    onChange={(e) => addFileInFolder(e, fd)}
+                                                    defaultChecked={false}
+                                                    sx={{ '& .MuiSvgIcon-root': { fontSize: 22 }, padding: "5px" }}
+                                                />
+                                            }
+                                            label={`${fd.fileName}`}
+                                        /> */}
+                                        <Typography variant="subtitle2">
+                                            {fd.fileName}
+                                        </Typography>
+                                        <Tooltip title="Remove file from folder" placement="top" arrow>
+                                            <CancelIcon
+                                                onClick={() => removeFileApiFun(folderSelect._id, fd)}
+                                                sx={{ fontSize: "15px", color: "#820909b8", "&:hover": { color: "#820909", cursor: "pointer" } }}
+                                            />
+                                        </Tooltip>
+
+                                    </Box>
+                                ))}
+
+                            </Box>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Box sx={{ width: "100%" }} display={"flex"} justifyContent="space-between">
+                            <Box px={"25px"} py={"15px"} sx={{ width: "100%", cursor: "pointer" }} display={"flex"}>
+                                {/* <AddIcon />
+                                <Typography onClick={() => navigate("/upload")} variant="subtitle2" >Add new file</Typography> */}
+                            </Box>
+                            <Box px={"15px"} py={1.5} container sx={{ width: "100%" }} gap={2} display="flex" justifyContent={"end"}>
+                                <Button
+                                    variant="outlined"
+                                    size='small'
+                                    sx={{ padding: "5px 30px" }}
+                                    onClick={() => handleClose()}>
+                                    Close
+                                </Button>
+                                {/* <Button
+                                    variant="contained"
+                                    size='small'
+                                    sx={{ padding: "5px 30px" }}
+                                    onClick={() => FinalAddFileInFolder()}
+                                >
+                                    Add
+                                </Button> */}
                             </Box>
                         </Box>
 

@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ToastContainer autoClose={5000} />
+    <ToastContainer autoClose={3000} />
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
         <BrowserRouter>

@@ -34,8 +34,11 @@ const FolderData = () => {
             modelOpens("AddFileModel");
         }
         if (typeService === "deleteFolder") {
-            console.log("delete folder", d)
             deleteFolder(d._id);
+        }
+        if (typeService === "ShowFilesInFolderModel") {
+            setFolderSelect(d);
+            modelOpens("ShowFilesInFolderModel");
         }
     };
 
@@ -51,7 +54,7 @@ const FolderData = () => {
                     'Content-Type': 'application/json'
                 }
             });
-            if (response.statusText === "OK") {
+            if (response.status === 200) {
                 const folderResponse = response.data;
                 if (folderResponse.status) {
                     toast.success(folderResponse.message);
@@ -116,7 +119,7 @@ const FolderData = () => {
 
     ///////// Search Folder code  Here
     const [srcFolderText, SetSrcFolderText] = useState("");
-    const [debouncedSearchTerm] = useDebounce(srcFolderText, 1000);
+    const [debouncedSearchTerm] = useDebounce(srcFolderText, 500);
     useEffect(() => {
         if (debouncedSearchTerm !== "") {
             console.log(debouncedSearchTerm);
@@ -187,7 +190,7 @@ const FolderData = () => {
                                             sx={{
                                                 marginRight: "10px", "& input": {
                                                     paddingTop: "7px",
-                                                    paddingBottom: "7px", fontSize: "14px", borderRadius: "50px"
+                                                    paddingBottom: "7px", fontSize: "14px",
                                                 },
                                                 paddingLeft: "4px", "& fieldset": { borderRadius: "8px" }
                                             }}
@@ -231,7 +234,6 @@ const FolderData = () => {
                                         >
                                             {/* <MoreVertIcon
                                                 sx={{ fontSize: "18px", color: '#7A7A7A', cursor: "pointer",position: "relative" }}
-                                               
                                             />
                                              */}
 
@@ -257,8 +259,14 @@ const FolderData = () => {
                                         </Box>
                                         <Box container display={'flex'} justifyContent="center">
                                             <FolderIcon
-                                                sx={{ fontSize: '80px', color: selectRandomColor(), cursor: "pointer" }}
-                                                onClick={() => console.log(d._id)}
+                                                sx={{
+                                                    fontSize: '80px',
+                                                    color: "#f8d755"
+                                                    //selectRandomColor()
+                                                    ,
+                                                    cursor: "pointer"
+                                                }}
+                                                onClick={() => ActionDelFolAndAddFile("ShowFilesInFolderModel", d)}
                                             />
                                         </Box>
                                         <Box container>

@@ -3,7 +3,7 @@ import { styled, useTheme, alpha } from '@mui/material/styles';
 import {
     Box, Toolbar, List, ListItem, ListItemButton, ListItemIcon, InputBase,
     ListItemText, Grid, CssBaseline, Typography, Divider, IconButton, Tooltip, Avatar, Menu, MenuItem,
-    Button, FormHelperText, FormControl, Select
+    Button, FormHelperText, FormControl, Select, LinearProgress
 } from '@mui/material/';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -545,6 +545,15 @@ const LeftSideBar = (props) => {
                                     Settings
                                 </span>
                             </Button>
+                        </Box>
+                    </Box>
+                    <Box id="StorageProgrssBar" mx={3.5} mt={2}>
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress variant="determinate" value={20} />
+                        </Box>
+                        <Box display={'flex'} justifyContent={"space-between"}>
+                            <Typography sx={{ fontSize: "10px", fontWeight: "600" }} variant="body2">0 MB</Typography>
+                            <Typography sx={{ fontSize: "10px", fontWeight: "600" }} variant="body2">1 GB</Typography>
                         </Box>
                     </Box>
                     <Box id="logout_box" sx={{ position: "absolute", bottom: "10px", width: "100%", borderTop: "1px solid #CFCFCF", paddingTop: "20px" }} mt={1}>
