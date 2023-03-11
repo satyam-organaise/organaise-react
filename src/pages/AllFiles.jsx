@@ -11,11 +11,16 @@ import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { useMutation } from 'react-query';
+import { deleteFileApi } from '../api/InternalApi/OurDevApi';
+import { useDebounce } from 'use-debounce';
 
 const AllFiles = () => {
     const navigate = useNavigate();
 
     const [userFiles, setUserFiles] = useState([]);
+    const [UserId, setUserId] = useState("");
 
     const colorsCode = ["#FBCFFF", "#FFCFCF", "#CFFFDD", "#CFEEFF", "#FFE9CF", "#CFE8FF", "#FFF2CF", "#FFCEE0", "#FFD5CF", "#DECFFF"]
     const selectRandomColor = () => {
@@ -26,6 +31,11 @@ const AllFiles = () => {
             minHeight: "500px", backgroundColor: "transparent",
         }
     }
+
+    useEffect(() => {
+        const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+        setUserId(UserId);
+    }, [])
 
     /////// Get files of this user
     const getFilesOfUser = async (userId) => {
@@ -46,11 +56,54 @@ const AllFiles = () => {
     }
 
     useEffect(() => {
-        const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
-        if (UserId) {
+        // const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+        if (UserId !== "") {
             getFilesOfUser(UserId);
         }
-    }, [])
+    }, [UserId])
+
+    ///////////// Delete fie code add here
+    const { mutateAsync: deleteFileApiCall, isLoading: delFileIsLoading } = useMutation(deleteFileApi)
+    const ActionDelFile = async (data) => {
+        const confarmDelete = window.confirm("Are you sure do u want to delete this file.");
+        if (confarmDelete) {
+            // const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+            const createDeleteObj = { fileId: data._id, userId: UserId };
+            const resData = await deleteFileApiCall(createDeleteObj);
+            if (resData.status) {
+                toast.success(resData.message);
+                if (debouncedSearchTerm !== "") {
+                    const afterDelFilterFile = userFiles.filter((srcFiles) => srcFiles.fileId !== data.fileId);
+                    setUserFiles(afterDelFilterFile);
+                    if (afterDelFilterFile.length === 0) {
+                        SetSrcFileText("");
+                    }
+                } else {
+                    getFilesOfUser(UserId);
+                }
+            } else {
+                toast.error(resData.message);
+            }
+        }
+
+    }
+
+    ///////////// Search file 
+    const [srcFileText, SetSrcFileText] = useState("");
+    const [debouncedSearchTerm] = useDebounce(srcFileText, 500);
+    useEffect(() => {
+        if (debouncedSearchTerm !== "") {
+            const searchingFiles = userFiles.filter((srcFiles) => srcFiles.fileName.toLowerCase().startsWith(debouncedSearchTerm.toLowerCase()));
+            setUserFiles(searchingFiles);
+        } else {
+            if (UserId !== "") {
+                getFilesOfUser(UserId);
+            }
+
+        }
+
+    }, [debouncedSearchTerm, UserId])
+
 
     return (
         <LeftSideBar data={{ pageName: "data", index: 2 }}>
@@ -94,12 +147,12 @@ const AllFiles = () => {
                                         sx={{
                                             marginRight: "10px", "& input": {
                                                 paddingTop: "7px",
-                                                paddingBottom: "7px", fontSize: "14px", borderRadius: "50px"
+                                                paddingBottom: "7px", fontSize: "14px"
                                             },
                                             paddingLeft: "4px", "& fieldset": { borderRadius: "8px" }
                                         }}
-                                        //value={}
-                                        // onChange={}
+                                        value={srcFileText}
+                                        onChange={(e) => SetSrcFileText(e.target.value)}
                                         InputProps={{
                                             startAdornment: (
                                                 <InputAdornment position="start">
@@ -129,9 +182,24 @@ const AllFiles = () => {
                                     boxSizing: "border-box",
                                     border: "0.5px solid #CBCBCB", borderRadius: "8px"
                                 }}>
-                                    <Box container display={'flex'} justifyContent="end"><MoreVertIcon sx={{ fontSize: "18px", color: '#7A7A7A' }} /></Box>
+                                    <Box container display={'flex'} justifyContent="end">
+                                        {/* <MoreVertIcon sx={{ fontSize: "18px", color: '#7A7A7A' }} /> */}
+                                        <DeleteForeverIcon
+                                            sx={{
+                                                fontSize: "19px",
+                                                cursor: "pointer",
+                                                marginRight: "5px",
+                                                color: "#e70f0fc2"
+                                            }}
+                                            onClick={() => ActionDelFile(d)}
+                                        />
+                                    </Box>
                                     <Box container display={'flex'} justifyContent="center">
-                                        <TextSnippetIcon sx={{ fontSize: '80px', color: selectRandomColor() }} />
+                                        <TextSnippetIcon sx={{
+                                            fontSize: '80px',
+                                            color: "#2892e7d6"
+                                            //selectRandomColor() 
+                                        }} />
                                     </Box>
                                     <Box container>
                                         <Typography align='center' variant="subtitle2" color={"#121212"}>

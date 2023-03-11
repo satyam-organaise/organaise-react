@@ -19,3 +19,11 @@ export const removeFileApi = async (getData) => {
     return response.data
 }
 
+///////delete file
+export const deleteFileApi = async (getData) => {
+    const response = await axios.delete(`${localUrl}/deleteFile`, {data:getData});
+    if (!response.statusText === "OK") {
+        throw new Error("Something is wrong.");
+    }
+    return response.data
+}

@@ -14,6 +14,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import { useDebounce } from 'use-debounce';
 
+
 const FolderData = () => {
     const colorsCode = ["#FBCFFF", "#FFCFCF", "#CFFFDD", "#CFEEFF", "#FFE9CF", "#CFE8FF", "#FFF2CF", "#FFCEE0", "#FFD5CF", "#DECFFF"]
     const selectRandomColor = () => {
