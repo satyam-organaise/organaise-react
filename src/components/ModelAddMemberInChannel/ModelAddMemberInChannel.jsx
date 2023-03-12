@@ -42,7 +42,6 @@ export default function ModelAddMemberInChannel({ AddMemberModel, setMemberModel
   ///////// when click on the subscribe button
   const AddMemberButton = async (selectChannel, selectUser, user_id) => {
     try {
-
       const membership = await createChannelMembership(
         selectChannel.ChannelArn,
         `${appConfig.appInstanceArn}/user/${selectUser.value}`,

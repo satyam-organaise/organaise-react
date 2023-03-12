@@ -105,14 +105,14 @@ function App() {
           </Routes>
           :
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            {/* <Route path="/" element={<Dashboard />} /> */}
             <Route path="/data" element={<Data userId={userId} />} />{/** Delete code  aafter file upload feaature complete */}
             <Route path="/message" element={<Message />} />{/** Delete code after creaing new message feature complete */}
             <Route path="/folder" element={<Folder userId={userId} />} />{/** Delete code after folder feature complete */}
             <Route path="/companyDetail" element={<CompanyDetails />} />
             <Route path="/upload" element={<FileUpload />} />
             <Route path="/create-folder" element={<FolderData userId={userId} />} />
-            <Route path="/mychannel" element={<MyMessage userId={userId} />} />
+            <Route path="/" element={<MyMessage userId={userId} />} />
             <Route path="/model" element={<ContentModels />} />
             <Route path="/allFiles" element={<AllFiles />} />
 

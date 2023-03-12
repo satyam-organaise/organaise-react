@@ -30,8 +30,14 @@ import PersonIcon from '@mui/icons-material/Person';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ContentModels from '../../pages/ContentModels';
-
-
+import {
+    createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito,
+    sendChannelMessage, listChannelMessages
+}
+    from "../../api/ChimeApi/ChimeApi";
+import appConfig from "../../Config";
+//////////get the all users from congnito ///////////////////
+import { IdentityService } from '../../services/IdentityService.js';
 
 const drawerWidth = 220;
 
@@ -156,6 +162,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 
 const LeftSideBar = (props) => {
+    
     const theme = useTheme();
     const navegate = useNavigate();
     const location = useLocation();
@@ -170,6 +177,24 @@ const LeftSideBar = (props) => {
     const [show, setShow] = useState(false);
     const [NewModelOpen, setNewModelOpen] = useState(false);
     const [activeModel, setActiveModel] = useState("")
+
+
+    //////////// Store the userid of user ////////
+    const [UserId, setUserId] = useState("");
+    ////////// Create and store Identity service //////
+    const [IdentityServiceObject] = useState(
+        () => new IdentityService(appConfig.region, appConfig.cognitoUserPoolId)
+    );
+    //////////When this page render then user_id store , nad channel list also load
+    useEffect(() => {
+        getAwsCredentialsFromCognito();
+        IdentityServiceObject.setupClient();
+        let getLoginUserName = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.LastAuthUser`);
+        let selectUserData = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.${getLoginUserName}.userData`);
+        let userid = (JSON.parse(selectUserData).UserAttributes.find((d) => d.Name === "profile")).Value;
+        setUserId(userid)
+        //setMember({ username: getLoginUserName, userId: userid });
+    }, [])
 
     useEffect(() => {
         if (props?.data?.pageName === "Folder") {
@@ -243,6 +268,45 @@ const LeftSideBar = (props) => {
         setActiveModel("AddChannel");/////// which type of model active
         setNewModelOpen(true);////// Real dilog box open
     }
+
+
+
+    /////////////////////////////////////////////////////
+    /////////// Get the channel list and store  it //////
+    //////// Here we are store a channel name list //////
+    /////////////////////////////////////////////////////
+    const [channelList, setChannelList] = useState([]);
+    ///////  Here store channel interval
+    const [ChannelInterval, setChannelInterval] = useState(null);
+    const channelListFunction = async (userid) => {
+        const userChannelMemberships = await listChannelMembershipsForAppInstanceUser(
+            userid
+        );
+        const userChannelList = userChannelMemberships.map(
+            (channelMembership) => {
+                const channelSummary = channelMembership.ChannelSummary;
+                channelSummary.SubChannelId =
+                    channelMembership.AppInstanceUserMembershipSummary.SubChannelId;
+                return channelSummary;
+            }
+        );
+        setChannelList(userChannelList);
+    }
+    /////// run first timeand get the channel list and store it
+    useEffect(() => {
+        if (UserId !== "") {
+            clearInterval(ChannelInterval);
+            setChannelList([]);
+            setChannelInterval(setInterval(() => {
+                channelListFunction(UserId);
+            }, [10000]))
+        }
+    }, [UserId])
+
+
+
+
+
 
     //////// useLocation Check
     useEffect(() => {
@@ -416,12 +480,38 @@ const LeftSideBar = (props) => {
                         </Box>
                         <Box>
                             <List sx={{ padding: "0px" }} >
-                                <ListItem sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px" }}>
-                                    <ListItemText primary={`# General`} sx={{ opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px", "& span": { fontSize: "13px", color: "#5454D4", fontWeight: 500 } }} />
+                                {/* <ListItem sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px" }}>
+                                    <ListItemText
+                                        primary={`# General`}
+                                        sx={{
+                                            opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px",
+                                            "& span": { fontSize: "13px", color: "#5454D4", fontWeight: 500 }
+                                        }}
+                                    />
                                 </ListItem>
                                 <ListItem sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px" }}>
-                                    <ListItemText primary={`# Random`} sx={{ opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" } }} />
-                                </ListItem>
+                                    <ListItemText
+                                        primary={`# Random`}
+                                        sx={{
+                                            opacity: open ? 1 : 0, marginTop: "4px",
+                                            marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
+                                        }}
+                                    />
+                                </ListItem> */}
+                                {channelList.length !== 0 && channelList.map((d) =>
+                                    <ListItem
+                                        sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px" }}
+                                        onClick={() => {props.data.setSelectedChannel(d) ; props.data.setMessagingActive(true)}}
+                                    >
+                                        <ListItemText
+                                            primary={d.Name.charAt(0).toUpperCase() + d.Name.slice(1)}
+                                            sx={{
+                                                opacity: open ? 1 : 0, marginTop: "4px",
+                                                marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
+                                            }}
+                                        />
+                                    </ListItem>)
+                                }
                                 <ListItem
                                     sx={{
                                         paddingTop: "0px", paddingBottom: "0px",
@@ -646,7 +736,6 @@ const LeftSideBar = (props) => {
                     setShow={setShow}
                     setActiveModel={setActiveModel}
                     setNewModelOpen={setNewModelOpen}
-
                 />
             }
         </>

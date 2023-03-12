@@ -12,8 +12,18 @@ import { useDebounce } from 'use-debounce';
 import { useNavigate } from 'react-router-dom';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { removeFileApi } from '../api/InternalApi/OurDevApi';
+import appConfig from "../Config";
+import {
+    createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito,
+    sendChannelMessage, listChannelMessages, createChannelMembership
+}
+    from "../api/ChimeApi/ChimeApi";
 
 
+import { getAllUsersFromCognitoIdp, setAuthenticatedUserFromCognito } from "../api/CognitoApi/CognitoApi";
+
+//////////get the all users from congnito ///////////////////
+import { IdentityService } from '../services/IdentityService.js';
 
 const ContentModels = ({
     activeModel,
@@ -25,10 +35,16 @@ const ContentModels = ({
     setNewModelOpen,
     getFoldersData,
     folderSelect,
+    ActiveChannel,
 }) => {
     const navigate = useNavigate();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
+
+    ////////// Create and store Identity service //////
+    const [IdentityServiceObject] = useState(
+        () => new IdentityService(appConfig.region, appConfig.cognitoUserPoolId)
+    );
 
 
     const handleClickOpen = () => {
@@ -48,17 +64,73 @@ const ContentModels = ({
         { title: 'The Godfather: Part II', year: 1974 },
     ]
 
+    //////////// Store the userid of user ////////
+    const [user_id, setUserID] = useState("");
 
+    //////////When this page render then user_id store , nad channel list also load
+    useEffect(() => {
+        getAwsCredentialsFromCognito();
+        IdentityServiceObject.setupClient();
+        let getLoginUserName = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.LastAuthUser`);
+        let selectUserData = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.${getLoginUserName}.userData`);
+        let userid = (JSON.parse(selectUserData).UserAttributes.find((d) => d.Name === "profile")).Value;
+        setUserID(userid)
+    }, [])
 
     ////////// channel state value save here
+
+    //////// Here we are store a channel name list //////
+    const [channelList, setChannelList] = useState([]);
     const [channelName, setChannelName] = useState("");
     const [channelDiscription, setChannelDiscription] = useState("");
-    const createChannelFun = () => {
+
+    const createChannelFun = async () => {
         if (channelName === "") {
             toast.info("Please enter channel name");
             return;
         }
-        console.log(channelName, channelDiscription);
+        if (channelName != null && channelName != "") {
+            const creatChannelObj = {
+                "instenceArn": `${appConfig.appInstanceArn}`,
+                "metaData": null,
+                "newName": `${channelName}`,
+                "mode": "RESTRICTED",
+                "privacy": "PRIVATE",
+                "elasticChannelConfiguration": null,
+                "userId": `${user_id}`
+            }//////// These object types value pass in createChannel function 
+            const channelArn = await createChannel(`${appConfig.appInstanceArn}`, null,
+                `${channelName}`, "RESTRICTED", "PRIVATE", null, `${user_id}`);/////////By this function we are  creating the channnel
+            if (channelArn) {
+                const channel = await describeChannel(channelArn, user_id);
+                if (channel) {
+                    // await channelListFunction(user_id);
+                    toast.success("Channel created successfully.");
+                } else {
+                    console.log('Error, could not retrieve channel information.');
+                }
+            } else {
+                console.log('Error, could not create new channel.');
+            }
+        }
+        handleClose();
+    }
+
+    /////////// Get the channel list 
+    const channelListFunction = async (userid) => {
+        console.log("userid", userid);
+        const userChannelMemberships = await listChannelMembershipsForAppInstanceUser(
+            userid
+        );
+        const userChannelList = userChannelMemberships.map(
+            (channelMembership) => {
+                const channelSummary = channelMembership.ChannelSummary;
+                channelSummary.SubChannelId =
+                    channelMembership.AppInstanceUserMembershipSummary.SubChannelId;
+                return channelSummary;
+            }
+        );
+        setChannelList(userChannelList);
     }
 
     ///////// Create folder function and aadd staates here
@@ -232,6 +304,72 @@ const ContentModels = ({
         }
 
     }
+
+
+
+    /////////////////// add team mate model code  here
+    //////// All users list store here //////
+    const [AddAllUsers, SetAllUsersList] = useState([]);
+    ////////// Whenn user id set then this useEffect run
+    useEffect(() => {
+        if (user_id !== "") {
+            //setChannelInterval
+            channelListFunction(user_id);
+            getAllUsersFromCognitoIdp(IdentityServiceObject).then((uData) => {
+                if (uData.status) {
+                    SetAllUsersList(uData.data)
+                } else {
+                    toast.error("Something is wrong.");
+                    console.log("Something is wrong", uData);
+                }
+            }).catch((err) => {
+                console.log("Something is wrong error get  when user list get", err);
+            });
+        }
+    }, [user_id]);
+
+
+
+    /////////// when click on the add button in teammate model
+    const [selectUserSave, setAddUserObj] = useState(null);
+
+    /////////// When click on the select user then this function run here
+    const selectUserFun = async () => {
+        const response = await AddMemberButton(ActiveChannel, selectUserSave, user_id);
+        if (response.status) {
+            toast.success("Member added successfully");
+        } else {
+            toast.error("Something is wrong.Member not add in channel");
+        }
+    }
+
+    const AddMemberButton = async (selectChannel, selectUser, user_id) => {
+        try {
+            const membership = await createChannelMembership(
+                selectChannel.ChannelArn,
+                `${appConfig.appInstanceArn}/user/${selectUser.value}`,
+                user_id,
+                undefined //activeChannel.SubChannelId
+            );
+            const memberships = []  ///activeChannelMemberships;
+            memberships.push({ Member: membership });
+            handleClose();
+            return { status: true, data: memberships }
+        } catch (err) {
+            toast.error("Something is wrong please try after some time");
+            console.log("error in adding member in channel", err);
+            return { status: false, error: err };
+        }
+    }
+
+
+    useEffect(() => {
+        if (AddAllUsers.length !== 0) {
+            console.log(AddAllUsers);
+        }
+    }, [AddAllUsers])
+
+
 
 
     return (
@@ -432,11 +570,22 @@ const ContentModels = ({
                                     freeSolo
                                     id="search_teammate_and_add"
                                     disableClearable
-                                    options={top100Films.map((option) => option.title)}
+                                    options={AddAllUsers}
+                                    onChange={(event, newValue) => {
+                                        setAddUserObj(newValue);
+                                    }}
+                                    getOptionLabel={(option) => option.label}
+                                    getOptionSelected={(option, value) => option.value === value.value}
+                                    renderOption={(props, option) => (
+                                        <div {...props}>
+                                            <div>{option.label}</div>
+                                            {/* <div>{option.value}</div> */}
+                                        </div>
+                                    )}
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
-                                            label="Email address"
+                                            label="Username"
                                             InputProps={{
                                                 ...params.InputProps,
                                                 type: 'search',
@@ -459,10 +608,20 @@ const ContentModels = ({
                     </DialogContent>
                     <DialogActions>
                         <Box px={"15px"} py={1.5} container sx={{ width: "100%" }} gap={2} display="flex" justifyContent={"end"}>
-                            <Button variant="outlined" size='small' sx={{ padding: "5px 30px" }}>
+                            <Button
+                                variant="outlined"
+                                size='small'
+                                sx={{ padding: "5px 30px" }}
+                                onClick={() => handleClose()}
+                            >
                                 Discard
                             </Button>
-                            <Button variant="contained" size='small' sx={{ padding: "5px 30px" }}>
+                            <Button
+                                variant="contained"
+                                size='small'
+                                sx={{ padding: "5px 30px" }}
+                                onClick={() => selectUserFun()}
+                            >
                                 Add
                             </Button>
                         </Box>
