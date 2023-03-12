@@ -12,7 +12,7 @@ axios.interceptors.request.use(config => {
 // }
 
 export const removeFileApi = async (getData) => {
-    const response = await axios.post(`${localUrl}/removeFile`, getData);
+    const response = await axios.post(`${devURL}/removeFile`, getData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -21,7 +21,7 @@ export const removeFileApi = async (getData) => {
 
 ///////delete file
 export const deleteFileApi = async (getData) => {
-    const response = await axios.delete(`${localUrl}/deleteFile`, {data:getData});
+    const response = await axios.delete(`${devURL}/deleteFile`, {data:getData});
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
