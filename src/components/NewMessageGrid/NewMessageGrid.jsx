@@ -12,10 +12,12 @@ import appConfig from "../../Config";
 //////////get the all users from congnito ///////////////////
 import { IdentityService } from '../../services/IdentityService.js';
 import ContentModels from '../../pages/ContentModels';
+import { useLocation } from 'react-router-dom';
 
 
 const NewMessageGrid = ({ selectedChannel }) => {
 
+    const location = useLocation();
     //////////// Store the userid of user ////////
     const [UserId, setUserId] = useState("");
     ////////// Create and store Identity service //////
@@ -56,15 +58,17 @@ const NewMessageGrid = ({ selectedChannel }) => {
 
     useEffect(() => {
         console.log("messageInterval val", messageInterval)
-        if (Object.keys(ActiveChannel).length > 0) {/////Here we are check object is empty or not
+        if ((Object.keys(ActiveChannel).length > 0) && (location.pathname === "/")) {/////Here we are check object is empty or not
             clearInterval(messageInterval);
             setAllMessgesOfChannel([]);
             setmessageInterval(setInterval(() => {
                 GetMessagesListOnEverySec(ActiveChannel, UserId);
             }, [3000]))
             console.log("messageInterval", messageInterval);
+        } else {
+            clearInterval(messageInterval);
         }
-    }, [ActiveChannel])
+    }, [ActiveChannel, location])
 
 
     const cssStyle = {

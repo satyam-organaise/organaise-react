@@ -38,6 +38,10 @@ import {
 import appConfig from "../../Config";
 //////////get the all users from congnito ///////////////////
 import { IdentityService } from '../../services/IdentityService.js';
+import { useMutation } from 'react-query';
+import { getCompanyName } from '../../api/InternalApi/OurDevApi';
+import { toast } from 'react-toastify';
+import BusinessIcon from '@mui/icons-material/Business';
 
 const drawerWidth = 220;
 
@@ -181,6 +185,7 @@ const LeftSideBar = (props) => {
 
     //////////// Store the userid of user ////////
     const [UserId, setUserId] = useState("");
+    const [subUserId, setSubUserId] = useState("");
     ////////// Create and store Identity service //////
     const [IdentityServiceObject] = useState(
         () => new IdentityService(appConfig.region, appConfig.cognitoUserPoolId)
@@ -192,7 +197,9 @@ const LeftSideBar = (props) => {
         let getLoginUserName = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.LastAuthUser`);
         let selectUserData = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.${getLoginUserName}.userData`);
         let userid = (JSON.parse(selectUserData).UserAttributes.find((d) => d.Name === "profile")).Value;
+        let GetsubUserId = (JSON.parse(selectUserData).UserAttributes.find((d) => d.Name === "sub")).Value;
         setUserId(userid)
+        setSubUserId(GetsubUserId);
         //setMember({ username: getLoginUserName, userId: userid });
     }, [])
 
@@ -201,6 +208,24 @@ const LeftSideBar = (props) => {
             setOpen(!open);
         }
     }, [props.data])
+
+
+    //////// here we are call api to getting company name
+    const [comNameSave, SetComName] = useState([]);
+    const { mutateAsync: getComName, isLoading: GetComNameIsLoading } = useMutation(getCompanyName);
+    const getComFun = async (subUserId) => {
+        const responseGetCom = await getComName(subUserId);
+        if (responseGetCom.status) {
+            SetComName(responseGetCom.data)
+        } else {
+            toast.error(responseGetCom.message);
+        }
+    }
+    useEffect(() => {
+        if (subUserId !== "") {
+            getComFun(subUserId);
+        }
+    }, [subUserId])
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -295,14 +320,19 @@ const LeftSideBar = (props) => {
 
     /////// run first time and get the channel list and store it
     useEffect(() => {
-        if (UserId !== "") {
+        if ((UserId !== "") && (location.pathname === "/")) {
             clearInterval(ChannelInterval);
             setChannelList([]);
             setChannelInterval(setInterval(() => {
                 channelListFunction(UserId);
-            }, [5000]))
+            }, [3000]))
+        } else {
+            if (UserId !== "") {
+                clearInterval(ChannelInterval);
+                channelListFunction(UserId);
+            }
         }
-    }, [UserId])
+    }, [UserId, location])
 
     //////// useLocation Check and update the state according to left sidebar options 
     useEffect(() => {
@@ -456,7 +486,19 @@ const LeftSideBar = (props) => {
                     </DrawerHeader>
                     <Divider />
                     <FormControl sx={{ m: 1, minWidth: 120, paddingLeft: "15px", paddingRight: "15px", }}>
-                        <Select
+                        <Box>
+                            <Typography
+                                variant="subtitle2"
+                                sx={{
+                                    border: "1px solid #3333336e", width: "auto", borderRadius: "5px",
+                                    padding: "10px", fontSize: "15px", fontWeight: "800",
+                                    color: "#333333e8", backgroundColor: "#534d4d14", position: "relative"
+                                }}
+                            >
+                                <BusinessIcon /><span style={{ position: "absolute", marginTop: "3px", marginLeft: "5px" }}>{comNameSave.length !== 0 && comNameSave[0].companyName}</span>
+                            </Typography>
+                        </Box>
+                        {/* <Select
                             value={age}
                             onChange={handleChange}
                             displayEmpty
@@ -464,7 +506,7 @@ const LeftSideBar = (props) => {
                         >
                             <MenuItem value={10}>Microsoft</MenuItem>
                             <MenuItem value={20}>Google</MenuItem>
-                        </Select>
+                        </Select> */}
                     </FormControl>
                     <Box id="channel_box">
                         <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>

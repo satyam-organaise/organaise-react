@@ -1,13 +1,47 @@
 import { Box, Grid, Typography, TextField, Button } from '@mui/material'
 import axios from 'axios';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify';
+import { getCompanyName, postCompannyName } from '../api/InternalApi/OurDevApi';
 
 import organaiseLogo from "../assets/Logo/organaise-logo.png";
 
 const CompanyDetails = () => {
 
+    const [userId, setUserID] = useState("")
+
+
     const [companyName, setCompanyName] = useState("");
+    /////// get Company data
+    const getComFun = async (subUserId) => {
+        try {
+            const responseGetCom = await getCompanyName(subUserId);
+            if (responseGetCom.status) {
+                if (responseGetCom.data.length > 0) {
+                    window.location.href = "/"
+                }
+            } else {
+                toast.error(responseGetCom.message);
+            }
+        } catch (error) {
+            console.log(error.response.message);
+        }
+    }
+
+    useEffect(() => {
+        const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
+        setUserID(UserId);
+    }, [])
+
+    useEffect(() => {
+        if (userId !== "") {
+            getComFun(userId);
+        }
+    }, [userId])
+
+
+
+
 
     /////// Create company function call
     const createCompany = async () => {
@@ -16,25 +50,22 @@ const CompanyDetails = () => {
             return;
         }
         const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
-        const response = await axios.post('https://devorganaise.com/api/createCompany',
-            { userId: UserId, companyName: companyName },
-            {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        if (response.statusText === "OK") {
-            if (response.data.status) {
-                toast.success(response.data.message);
+        try {
+            const response = await postCompannyName({ userId: UserId, companyName: companyName })
+            console.log(response);
+            if (response.status) {
+                toast.success(response.message);
                 setTimeout(() => {
                     window.location = "/";
                 }, [500])
             } else {
-                toast.error("Something is wrong");
+                toast.error(response.message);
             }
-        } else {
-            toast.error("Something is wrong");
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response.message);
         }
+
     }
 
     return (
