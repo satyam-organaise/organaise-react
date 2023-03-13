@@ -39,17 +39,17 @@ const cssStyle = {
         width: "100%",
         marginBottom: "5px",
         '& .MuiInputLabel-root': {
-            color: '#377E3F', // default label color
+            color: '#1c529b', // default label color
         },
         '& .MuiOutlinedInput-root': {
             '& fieldset': {
-                borderColor: '#377E3F' // default border color
+                borderColor: 'primary' // default border color
             },
             '&:hover fieldset': {
-                borderColor: '#377E3F' // border color on hover
+                borderColor: 'primary' // border color on hover
             },
             '&.Mui-focused fieldset ': {
-                borderColor: '#377E3F' // border color when focused
+                borderColor: 'primary' // border color when focused
             },
 
         }
@@ -358,9 +358,9 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                             sx={{
                                                 ...cssStyle.btn_textfield,
                                                 height: "50px", position: "relative",
-                                                backgroundColor: "#225127e6",
+                                                backgroundColor: "primary",
                                                 '&:hover': {
-                                                    backgroundColor: '#377E3F' // background color on hover
+                                                    backgroundColor: '#1c529b' // background color on hover
                                                 }
                                             }}
                                             disabled={btnDisabed || isLoadingSignUpFun}
@@ -376,7 +376,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                                         right: '3%',
                                                         marginTop: -12,
                                                         marginLeft: -12,
-                                                        color: "#225127e6"
+                                                        color: "primary"
                                                     }}
                                                 />
                                             )}
@@ -446,7 +446,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                     </Grid>
                                     <Grid item xs={12} sx={cssStyle.grid_textBox_button}>
                                         <Typography variant="subtitle1" align='center' fontWeight='400' color="#333333">
-                                            Didn’t receive OTP? <span style={{ fontWeight: 700, color: "#225127e6" }}>Resend</span>
+                                            Didn’t receive OTP? <span style={{ fontWeight: 700, color: "#1c529b" }}>Resend</span>
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={12} sx={cssStyle.grid_textBox_button}>
@@ -454,9 +454,9 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                             sx={{
                                                 ...cssStyle.btn_textfield,
                                                 height: "50px", position: "relative",
-                                                backgroundColor: "#225127e6",
+                                                backgroundColor: "primary",
                                                 '&:hover': {
-                                                    backgroundColor: '#377E3F' // background color on hover
+                                                    backgroundColor: '#1c529b' // background color on hover
                                                 }
                                             }}
                                             disabled={verifyBtnDisable}
@@ -472,7 +472,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                                         right: '3%',
                                                         marginTop: -12,
                                                         marginLeft: -12,
-                                                        color: "#225127e6"
+                                                        color: "#1c529b"
                                                     }}
                                                 />
                                             )}

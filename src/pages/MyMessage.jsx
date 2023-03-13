@@ -49,7 +49,9 @@ const MyMessage = () => {
                                 <Typography variant="subtitle1" fontWeight={"500"} >No data added yet</Typography>
                             </Grid>
                             <Grid container item xs={12} mt={2} display="flex" justifyContent={'center'}>
-                                <Typography sx={{ width: { sm: "75%", md: "45%" } }} color="#808191" variant="body2" textAlign={'center'} textTransform={'capitalize'}>
+                                <Typography sx={{ width: { sm: "75%", md: "45%" } }}
+                                 color="#808191" variant="body2" 
+                                 textAlign={'center'} textTransform={'capitalize'}>
                                     It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
                                 </Typography>
                             </Grid>

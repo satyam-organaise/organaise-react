@@ -327,7 +327,7 @@ const ContentModels = ({
                 console.log("Something is wrong error get  when user list get", err);
             });
         }
-    }, [user_id ,location]);
+    }, [user_id, location]);
 
 
 
@@ -697,7 +697,11 @@ const ContentModels = ({
                         <Box sx={{ width: "100%" }} display={"flex"} justifyContent="space-between">
                             <Box px={"25px"} py={"15px"} sx={{ width: "100%", cursor: "pointer" }} display={"flex"}>
                                 <AddIcon />
-                                <Typography onClick={() => navigate("/upload")} variant="subtitle2" >Add new file</Typography>
+                                <Typography
+                                    onClick={() => navigate("/upload")}
+                                    variant="subtitle2" >
+                                    Add new file
+                                </Typography>
                             </Box>
                             <Box px={"15px"} py={1.5} container sx={{ width: "100%" }} gap={2} display="flex" justifyContent={"end"}>
                                 <Button

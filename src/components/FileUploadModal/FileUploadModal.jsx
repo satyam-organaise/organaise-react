@@ -309,7 +309,7 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, user
                             <Button
                                 sx={{
                                     paddingLeft: "25px", paddingRight: '25px',
-                                    backgroundColor: "#03CF80", textTransform: "capitalize"
+                                    backgroundColor: "primary", textTransform: "capitalize"
                                 }}
                                 size='small'
                                 variant='contained'
@@ -326,7 +326,7 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, user
                                             right: '3%',
                                             marginTop: -12,
                                             marginLeft: -12,
-                                            color: "#225127e6"
+                                            color: "primary"
                                         }}
                                     />
                                 )}

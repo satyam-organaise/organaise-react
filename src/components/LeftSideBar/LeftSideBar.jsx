@@ -495,7 +495,7 @@ const LeftSideBar = (props) => {
                                     color: "#333333e8", backgroundColor: "#534d4d14", position: "relative"
                                 }}
                             >
-                                <BusinessIcon /><span style={{ position: "absolute", marginTop: "3px", marginLeft: "5px" }}>{comNameSave.length !== 0 && comNameSave[0].companyName}</span>
+                                <BusinessIcon /><span style={{ position: "absolute", marginTop: "3px", marginLeft: "5px", textTransform: "capitalize" }}>{comNameSave.length !== 0 && comNameSave[0].companyName}</span>
                             </Typography>
                         </Box>
                         {/* <Select
@@ -525,7 +525,7 @@ const LeftSideBar = (props) => {
                                 endIcon={<KeyboardArrowDownIcon sx={{ position: "absolute", right: "10px", top: "8px" }} />}
                             >
                                 <GroupAddIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
-                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px" }}>
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px", }}>
                                     Channels
                                 </span>
                             </Button>

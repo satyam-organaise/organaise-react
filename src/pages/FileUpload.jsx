@@ -37,7 +37,8 @@ const FileUpload = () => {
                         </Typography>
                     </Grid>
                     <Grid container item xs={12} mt={2} display="flex" justifyContent={'center'}>
-                        <Button variant="contained" onClick={() => handleClickOpen()} size='small' sx={{ padding: "5px 25px" }}>
+                        <Button variant="contained" onClick={() => handleClickOpen()} size='small'
+                         sx={{ padding: "5px 25px" }}>
                             Upload Data
                         </Button>
                     </Grid>
