@@ -9,7 +9,7 @@ import TextareaAutosize from '@mui/base/TextareaAutosize';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 import { useDebounce } from 'use-debounce';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { removeFileApi } from '../api/InternalApi/OurDevApi';
 import appConfig from "../Config";
@@ -41,6 +41,7 @@ const ContentModels = ({
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
 
+    const location = useLocation();
     ////////// Create and store Identity service //////
     const [IdentityServiceObject] = useState(
         () => new IdentityService(appConfig.region, appConfig.cognitoUserPoolId)
@@ -312,7 +313,7 @@ const ContentModels = ({
     const [AddAllUsers, SetAllUsersList] = useState([]);
     ////////// Whenn user id set then this useEffect run
     useEffect(() => {
-        if (user_id !== "") {
+        if ((user_id !== "") && (location.pathname === "/")) {
             //setChannelInterval
             channelListFunction(user_id);
             getAllUsersFromCognitoIdp(IdentityServiceObject).then((uData) => {
@@ -326,7 +327,7 @@ const ContentModels = ({
                 console.log("Something is wrong error get  when user list get", err);
             });
         }
-    }, [user_id]);
+    }, [user_id ,location]);
 
 
 

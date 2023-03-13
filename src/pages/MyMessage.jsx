@@ -3,13 +3,14 @@ import LeftSideBar from '../components/LeftSideBar/LeftSideBar'
 import NewMessageGrid from '../components/NewMessageGrid/NewMessageGrid'
 import { Button, Box, Grid, Typography } from '@mui/material/';
 import fileUploadImage from "../assets/BackgroundImages/upload-file.png";
+import ContentModels from './ContentModels';
 
 const MyMessage = () => {
 
     ////////// active messaging part
     const [messagingActive, setMessagingActive] = useState(false);
     ///////// Selected Channel state declare
-    const [selectedChannel ,  setSelectedChannel] = useState({});
+    const [selectedChannel, setSelectedChannel] = useState({});
     const styleCss = {
         fileUploadMainBox: {
             minHeight: "500px", backgroundColor: "transparent",
@@ -18,9 +19,25 @@ const MyMessage = () => {
 
 
 
+    //////  when click on the add channel button
+    //////new model  open when click on the left side bar options and some others options like add folder and add teammate and so more
+    const [openNewModel, setOpenNewModel] = useState(false);
+    const [show, setShow] = useState(false);
+    const [NewModelOpen, setNewModelOpen] = useState(false);
+    const [activeModel, setActiveModel] = useState("")
+
+    ///// Model Open function like create channel
+    const modelOpens = () => {
+        setOpenNewModel(true);/////this change the state in this page and then model show
+        setShow(true);/////active model in diffrent page
+        setActiveModel("AddChannel");/////// which type of model active
+        setNewModelOpen(true);////// Real dilog box open
+    }
+
+
     return (
         <>
-            <LeftSideBar data={{ pageName: "Message", index: 1, setMessagingActive: setMessagingActive , setSelectedChannel:setSelectedChannel}}  >
+            <LeftSideBar data={{ pageName: "Message", index: 1, setMessagingActive: setMessagingActive, setSelectedChannel: setSelectedChannel }}  >
 
                 {!messagingActive &&
                     <Box sx={styleCss.fileUploadMainBox}>
@@ -37,7 +54,12 @@ const MyMessage = () => {
                                 </Typography>
                             </Grid>
                             <Grid container item xs={12} mt={2} display="flex" justifyContent={'center'}>
-                                <Button variant="contained" size='small' sx={{ padding: "5px 25px" }}>
+                                <Button
+                                    variant="contained"
+                                    size='small'
+                                    sx={{ padding: "5px 25px" }}
+                                    onClick={() => modelOpens()}
+                                >
                                     Create Channel
                                 </Button>
                             </Grid>
@@ -45,7 +67,19 @@ const MyMessage = () => {
                     </Box>
                 }
 
-                {messagingActive && <NewMessageGrid  selectedChannel={selectedChannel} />}
+                {messagingActive && <NewMessageGrid selectedChannel={selectedChannel} />}
+
+                {openNewModel &&
+                    <ContentModels
+                        activeModel={activeModel} //////  which type of model
+                        show={show} //// boolen value of avtive  state model
+                        NewModelOpen={NewModelOpen} ///// boolean value of dialog box open
+                        setOpenNewModel={setOpenNewModel}
+                        setShow={setShow}
+                        setActiveModel={setActiveModel}
+                        setNewModelOpen={setNewModelOpen}
+                    />
+                }
             </LeftSideBar>
         </>
     )

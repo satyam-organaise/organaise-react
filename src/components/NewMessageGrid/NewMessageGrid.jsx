@@ -35,7 +35,7 @@ const NewMessageGrid = ({ selectedChannel }) => {
         let selectUserData = localStorage.getItem(`CognitoIdentityServiceProvider.${appConfig.cognitoAppClientId}.${getLoginUserName}.userData`);
         let userid = (JSON.parse(selectUserData).UserAttributes.find((d) => d.Name === "profile")).Value;
         setUserId(userid)
-        //setMember({ username: getLoginUserName, userId: userid });
+        setMember({ username: getLoginUserName, userId: userid });
     }, [])
 
     /////////when user click on the channel/////////////
@@ -127,6 +127,44 @@ const NewMessageGrid = ({ selectedChannel }) => {
         setNewModelOpen(true);////// Real dilog box open
     }
 
+
+    ////////////// When user type  the message then store the value here
+    const [newMessage, setNewMessage] = useState("");
+    ////////// login member data///////
+    const [member, setMember] = useState({
+        username: '',
+        userId: '',
+    });
+
+    ////////// Send message here //////
+    const sendMessageByUser = async (ActiveChannel, sendingMessgeHere, member) => {
+        await sendChannelMessage(ActiveChannel.ChannelArn, sendingMessgeHere, "PERSISTENT", "STANDARD", member, undefined, null).then((messData) => {
+            listChannelMessages(ActiveChannel.ChannelArn, UserId, undefined, null).then((md) => {
+                setNewMessage("");
+                setAllMessgesOfChannel(md.Messages);
+            }).catch((error) => {
+                console.log("error", error);
+            })
+        }).catch((error) => {
+            console.log("message Sending error", error)
+        })
+
+    }
+    const handleEnterKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            if (newMessage !== "") {
+                sendMessageByUser(ActiveChannel, newMessage, member)
+            }
+
+        }
+    };
+
+    useEffect(() => {
+        if (AllMessagesChannel.length !== 0) {
+            console.log(AllMessagesChannel);
+        }
+
+    }, [AllMessagesChannel])
     return (
         <>
             <Box container py="13px" px={"25px"} boxSizing={"border-box"} sx={cssStyle.groupNameBox} display="flex" justifyContent={"space-between"}>
@@ -156,49 +194,77 @@ const NewMessageGrid = ({ selectedChannel }) => {
             </Box>
             <Box container position={'relative'} id="NewMessageBox" sx={cssStyle.firstBoxMessage}>
                 <Box container position={'absolute'} sx={cssStyle.messageBoxCon} pt={"40px"} pb={"30px"} mt={"0px"} px={"20px"}>
-                    <Grid id="rec_mess_con_grid" container spacing={5}>
-                        <Grid id="reciver_mess_grid" sx={{ paddingTop: "10px !important" }} item xs={12} md={6}>
-                            <Box container display={'flex'} mb={1} py={0.5}>
-                                <Box id="mess_user_pic_box">
-                                    <Stack ml={1} direction="row">
-                                        <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
-                                    </Stack>
-                                </Box>
-                                <Box ml={1}>
-                                    <Grid container>
-                                        <Grid container item>
-                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>satyam</Typography>
-                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
-                                        </Grid>
-                                        <Grid container item boxSizing={"border-box"} mr="16px" >
-                                            <Typography variant="body2" sx={cssStyle.recRealMess} >It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.</Typography>
-                                        </Grid>
+                    {AllMessagesChannel.length !== 0 &&
+                        AllMessagesChannel.map((mes) => {
+                            if (mes.Sender.Name !== member.username) {
+                                return <Grid id="rec_mess_con_grid" sx={{
+                                    marginTop: "0px", width: "100%", marginLeft: "0px",
+                                    boxSizing: "borderBox",
+                                }} container spacing={5}>
+                                    <Grid id="reciver_mess_grid" sx={{ paddingTop: "10px !important", paddingLeft: "0px !important" }} item xs={12} md={6}>
+                                        <Box container display={'flex'} mb={1} py={0.5}>
+                                            <Box id="mess_user_pic_box">
+                                                <Stack ml={1} direction="row">
+                                                    <Avatar
+                                                        sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }}
+                                                        alt="Remy Sharp"
+                                                        src="https://mui.com/static/images/avatar/1.jpg" />
+                                                </Stack>
+                                            </Box>
+                                            <Box ml={1}>
+                                                <Grid container>
+                                                    <Grid container item>
+                                                        <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
+                                                            {mes.Sender.Name}
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                                                    </Grid>
+                                                    <Grid container item boxSizing={"border-box"} mr="16px" >
+                                                        <Typography variant="body2" sx={cssStyle.recRealMess} >
+                                                            {mes.Content}
+                                                        </Typography>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+                                        </Box>
                                     </Grid>
-                                </Box>
-                            </Box>
-                            <Box container display={'flex'} mb={1} py={0.5}>
-                                <Box id="mess_user_pic_box">
-                                    <Stack ml={1} direction="row">
-                                        <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
-                                    </Stack>
-                                </Box>
-                                <Box ml={1}>
-                                    <Grid container>
-                                        <Grid container item>
-                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>satyam</Typography>
-                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
-                                        </Grid>
-                                        <Grid container item boxSizing={"border-box"} mr="16px" >
-                                            <Typography variant="body2" sx={cssStyle.recRealMess} >It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.</Typography>
-                                        </Grid>
+                                    <Grid id="empty_reciver_mess_grid" item display={{ xs: "none", md: "block" }} xs={12} md={6}>
                                     </Grid>
-                                </Box>
-                            </Box>
-                        </Grid>
-                        <Grid id="empty_reciver_mess_grid" item display={{ xs: "none", md: "block" }} xs={12} md={6}>
-                        </Grid>
-                    </Grid>
-                    <Grid id="send_mess_con_grid" container spacing={5}>
+                                </Grid>
+                            } else {
+                                return <Grid id="send_mess_con_grid" container spacing={5}>
+                                    <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
+                                    </Grid>
+                                    <Grid item id="sender_mess_grid" xs={12} md={6}>
+                                        <Box container display={'flex'} flexDirection="row-reverse" mb={1} py={0.5}>
+                                            <Box id="mess_user_pic_box_send">
+                                                <Stack ml={1} direction="row">
+                                                    <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
+                                                </Stack>
+                                            </Box>
+                                            <Box ml={1}>
+                                                <Grid container>
+                                                    <Grid container item display={"flex"} justifyContent="flex-end">
+                                                        <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
+                                                            {mes.Sender.Name}
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                                                    </Grid>
+                                                    <Grid container item boxSizing={"border-box"} mr="16px" display={"flex"} justifyContent="end">
+                                                        <Typography variant="body2" sx={{ ...cssStyle.sendRealMess, width: "auto", textAlign: "right" }} >
+                                                            {mes.Content}
+                                                        </Typography>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            }
+                        })}
+
+
+                    {/* <Grid id="send_mess_con_grid" container spacing={5}>
                         <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
                         </Grid>
                         <Grid item id="sender_mess_grid" xs={12} md={6}>
@@ -245,31 +311,7 @@ const NewMessageGrid = ({ selectedChannel }) => {
                                 </Box>
                             </Box>
                         </Grid>
-                    </Grid>
-                    <Grid id="send_mess_con_grid" container spacing={5}>
-                        <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
-                        </Grid>
-                        <Grid item id="sender_mess_grid" xs={12} md={6}>
-                            <Box container display={'flex'} flexDirection="row-reverse" mb={1} py={0.5}>
-                                <Box id="mess_user_pic_box_send">
-                                    <Stack ml={1} direction="row">
-                                        <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
-                                    </Stack>
-                                </Box>
-                                <Box ml={1}>
-                                    <Grid container>
-                                        <Grid container item display={"flex"} justifyContent="flex-end">
-                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>satyam</Typography>
-                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
-                                        </Grid>
-                                        <Grid container item boxSizing={"border-box"} mr="16px" >
-                                            <Typography variant="body2" sx={cssStyle.sendRealMess} >It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            </Box>
-                        </Grid>
-                    </Grid>
+                    </Grid> */}
                 </Box>
                 <Box position={'absolute'} sx={{ width: "100%", bottom: "0px", backgroundColor: "#ffffff" }} py={"10px"} container px={"25px"}>
                     <Box container
@@ -277,7 +319,17 @@ const NewMessageGrid = ({ selectedChannel }) => {
                             width: '100%',
                         }}
                     >
-                        <TextField size='small' sx={cssStyle.sendMessInput} fullWidth placeholder='Type a message' id="messageInput" />
+                        <TextField
+                            size='small'
+                            sx={cssStyle.sendMessInput}
+                            fullWidth
+                            placeholder='Type a message'
+                            id="messageInput"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyPress={handleEnterKeyPress}
+
+                        />
                         <AttachFileIcon sx={{ ...cssStyle.sendMessIcon, right: "60px", backgroundColor: "#fff", color: "#333" }} />
                         <SendIcon sx={cssStyle.sendMessIcon} />
                     </Box>

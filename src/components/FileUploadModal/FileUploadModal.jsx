@@ -14,7 +14,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 
 
 const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, userId }) => {
-    const navigate  = useNavigate();
+    const navigate = useNavigate();
     const [fileGet, setFile] = useState();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('sm');
@@ -47,17 +47,15 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, user
     };
 
 
-    const uploadFileData = async (fileGet) => {
+    const uploadFileData = async () => {
         setLoader(true);
         const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
         for (let index = 0; index < ShowFiles.length; index++) {
-
             let fileData = ShowFiles[index];
             const formData = new FormData();
             formData.append('fileData', fileData);
             formData.append('userId', UserId);
             formData.append('fileSize', fileData.size);
-
             const response = await axios.post('https://devorganaise.com/api/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -135,9 +133,12 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, user
         // id is get by useparams
         (acceptedFiles) => {
             let allFiles = [];
+            const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
             acceptedFiles.forEach((file, index) => {
-                let formData = new FormData();
-                formData.append(`file_${index}`, file);
+                let fileData = new FormData();
+                fileData.append(`file_${index}`, file);
+                fileData.append('userId', UserId);
+                fileData.append('fileSize', file.size);
                 // formData.append("project_id", id);
                 const fileDataSet = [file];
                 allFiles.push(file);
@@ -312,7 +313,7 @@ const FileUploadModal = ({ handleClose, open, setJsonData, handleClickOpen, user
                                 }}
                                 size='small'
                                 variant='contained'
-                                onClick={() => uploadFileData(fileGet)}
+                                onClick={() => uploadFileData()}
                                 disabled={loader}
                             >
                                 Upload Now

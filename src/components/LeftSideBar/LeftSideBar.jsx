@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { styled, useTheme, alpha } from '@mui/material/styles';
 import {
     Box, Toolbar, List, ListItem, ListItemButton, ListItemIcon, InputBase,
@@ -162,7 +162,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 
 const LeftSideBar = (props) => {
-    
+
     const theme = useTheme();
     const navegate = useNavigate();
     const location = useLocation();
@@ -292,23 +292,19 @@ const LeftSideBar = (props) => {
         );
         setChannelList(userChannelList);
     }
-    /////// run first timeand get the channel list and store it
+
+    /////// run first time and get the channel list and store it
     useEffect(() => {
         if (UserId !== "") {
             clearInterval(ChannelInterval);
             setChannelList([]);
             setChannelInterval(setInterval(() => {
                 channelListFunction(UserId);
-            }, [10000]))
+            }, [5000]))
         }
     }, [UserId])
 
-
-
-
-
-
-    //////// useLocation Check
+    //////// useLocation Check and update the state according to left sidebar options 
     useEffect(() => {
         if (location.pathname === "/upload") {
             setActivePage("upload");
@@ -319,10 +315,24 @@ const LeftSideBar = (props) => {
         if (location.pathname === "/create-folder") {
             setActivePage("createFolder");
         }
-        if (location.pathname === "/mychannel") {
+        if (location.pathname === "/") {
             setActivePage("mychannel");
         }
     }, [location])
+
+    //when user in another page and want to acccess messaging part
+    const InanotherPage = async (type, data) => {
+        if (type === "1") {
+            props.data.setSelectedChannel(data);
+            props.data.setMessagingActive(true);
+        } else {
+            if (location.pathname !== "/") {
+                navegate(`/`)
+                setActivePage("mychannel");
+            }
+        }
+
+    }
 
     return (
         <>
@@ -427,15 +437,15 @@ const LeftSideBar = (props) => {
                             justifyContent="center"
                             sx={{ transform: "translateX(-18px)" }}
                         >
-                            {open &&
+                            {/* {open &&
                                 <IconButton onClick={handleDrawerClose} sx={{ padding: "12px" }}>
-                                    {/* {theme.direction === 'rtl' ?
+                                    {theme.direction === 'rtl' ?
                                     <ChevronRightIcon /> :
                                     // <ChevronLeftIcon />
                                     <MenuIcon />
-                                } */}
+                                }
                                 </IconButton>
-                            }
+                            } */}
 
                             {open && <Typography
                                 variant="subtitle1"
@@ -463,7 +473,7 @@ const LeftSideBar = (props) => {
                                 aria-controls={open ? 'basic-menu' : undefined}
                                 aria-haspopup="true"
                                 aria-expanded={open ? 'true' : undefined}
-                                onClick={() => navigatePage("mychannel")}
+                                onClick={() => navigatePage("")}
                                 variant={activePage === "mychannel" ? "contained" : "text"}
                                 size='small'
                                 sx={{
@@ -500,8 +510,10 @@ const LeftSideBar = (props) => {
                                 </ListItem> */}
                                 {channelList.length !== 0 && channelList.map((d) =>
                                     <ListItem
-                                        sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px" }}
-                                        onClick={() => {props.data.setSelectedChannel(d) ; props.data.setMessagingActive(true)}}
+                                        sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px", cursor: "pointer" }}
+                                        onClick={() =>
+                                            location.pathname === "/" ? InanotherPage("1", d) : InanotherPage("2", d)
+                                        }
                                     >
                                         <ListItemText
                                             primary={d.Name.charAt(0).toUpperCase() + d.Name.slice(1)}
@@ -510,7 +522,8 @@ const LeftSideBar = (props) => {
                                                 marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
                                             }}
                                         />
-                                    </ListItem>)
+                                    </ListItem>
+                                )
                                 }
                                 <ListItem
                                     sx={{
