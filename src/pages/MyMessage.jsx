@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import LeftSideBar from '../components/LeftSideBar/LeftSideBar'
 import NewMessageGrid from '../components/NewMessageGrid/NewMessageGrid'
 import { Button, Box, Grid, Typography } from '@mui/material/';
-import fileUploadImage from "../assets/BackgroundImages/upload-file.png";
+import createChannelPng from "../assets/BackgroundImages/create-channel-homepage.png";
 import ContentModels from './ContentModels';
 
 const MyMessage = () => {
@@ -43,15 +43,15 @@ const MyMessage = () => {
                     <Box sx={styleCss.fileUploadMainBox}>
                         <Grid container>
                             <Grid container item xs={12} mt={2} display="flex" justifyContent={'center'}>
-                                <img src={fileUploadImage} style={{ width: "350px", userSelect: "none", pointerEvents: "none" }} alt="file-upload-image" />
+                                <img src={createChannelPng} style={{ width: "350px", userSelect: "none", pointerEvents: "none" }} alt="file-upload-image" />
                             </Grid>
                             <Grid container item xs={12} mt={2} display="flex" justifyContent={'center'}>
-                                <Typography variant="subtitle1" fontWeight={"500"} >No data added yet</Typography>
+                                <Typography variant="subtitle1" fontWeight={"500"} >No channel added yet or select your favorite channel.</Typography>
                             </Grid>
                             <Grid container item xs={12} mt={2} display="flex" justifyContent={'center'}>
                                 <Typography sx={{ width: { sm: "75%", md: "45%" } }}
-                                 color="#808191" variant="body2" 
-                                 textAlign={'center'} textTransform={'capitalize'}>
+                                    color="#808191" variant="body2"
+                                    textAlign={'center'} textTransform={'capitalize'}>
                                     It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
                                 </Typography>
                             </Grid>

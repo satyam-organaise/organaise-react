@@ -1,4 +1,4 @@
-import { Box, Grid, Typography, TextField, Button, IconButton, InputAdornment, } from '@mui/material'
+import { Box, Grid, Typography, TextField, Button, IconButton, InputAdornment, PasswordField } from '@mui/material'
 import CircularProgress from '@mui/material/CircularProgress';
 import React, { useEffect, useState } from 'react'
 import organaiseLogo from "../../assets/Logo/organaise-logo.png";
@@ -17,6 +17,7 @@ import {
     CognitoSignUp, SignUpOtpVarify,
     otpWithResetPassword, resetPasswordFun
 } from "../../api/CognitoApi/CognitoApi";
+import { passwordValidator } from '../../utils/validation';
 
 
 
@@ -62,6 +63,7 @@ const cssStyle = {
 const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfPass, setShowConfPass] = useState(false);
     const [OtpValue, setOtpValue] = useState('');////otp value store here
     const [showOtpVeriCont, setShowVeriCon] = useState(false);
     /////Store email address
@@ -207,6 +209,9 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                 toast.error("Password and confirm password not matched.")
                 return null;
             }
+            if (!passwordValidator(password) || !passwordValidator(confirmPassword)) {
+                return null;
+            }
             await createAccount(emailAddress, password);
         }
 
@@ -247,6 +252,10 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
         setShowPassword(!showPassword);
     };
 
+    const handleToggleConfPassword = () => {
+        setShowConfPass(!showConfPass);
+    }
+
 
     const bgImgForLoginSignUpForgetVarify = (serviceType) => {
         switch (serviceType) {
@@ -276,10 +285,15 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                 <Grid item xs={12} sm={12} md={6}>
                     <Box container sx={{ ...cssStyle.content_container_box, padding: "10% 5% 10% 20% !important" }} >
                         <Box>
-                            <img src={organaiseLogo} style={{ width: "150px" }} alt="organaise-logo-login-page" />
+                            <img
+                                src={organaiseLogo}
+                                style={{ width: "150px" }}
+                                alt="organaise-logo-login-page" />
                         </Box>
                         <Box>
-                            {showOtpVeriCont ? bgImgForLoginSignUpForgetVarify("verification") : bgImgForLoginSignUpForgetVarify(serviceType)}
+                            {showOtpVeriCont
+                                ? bgImgForLoginSignUpForgetVarify("verification") :
+                                bgImgForLoginSignUpForgetVarify(serviceType)}
                         </Box>
                     </Box>
                 </Grid>
@@ -310,21 +324,28 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                         <TextField
                                             id="login-signup-forgetPassword-password"
                                             label="Password"
-                                            //type={showPassword ? 'text' : 'password'}
-                                            type={'password'}
+                                            type={showPassword ? 'text' : 'password'}
                                             variant='outlined'
                                             sx={cssStyle.btn_textfield}
                                             value={password ? password : ""}
                                             onChange={(e) => setPassword(e?.target?.value)}
-                                        // InputProps={{
-                                        //     endAdornment: (
-                                        //         <InputAdornment position="end">
-                                        //             <IconButton onClick={handleTogglePassword}>
-                                        //                 {showPassword ? <VisibilityOff /> : <Visibility />}
-                                        //             </IconButton>
-                                        //         </InputAdornment>
-                                        //     ),
-                                        // }}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <InputAdornment position="end"
+                                                        sx={{
+                                                            display: password !== "" ? "contents" : "none"
+                                                        }}
+                                                    >
+                                                        {password.length > 2
+                                                            ?
+                                                            <IconButton onClick={handleTogglePassword}>
+                                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                            </IconButton>
+                                                            : null
+                                                        }
+                                                    </InputAdornment>
+                                                ),
+                                            }}
                                         />
                                         {/* When service type login then this link show otherwise not visible */}
                                         {
@@ -343,11 +364,29 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                             <TextField
                                                 id="login-signup-forgetPassword-confirm-password"
                                                 label="Confirm Password"
-                                                type={'password'}
+                                                type={showConfPass ? 'text' : 'password'}
                                                 variant='outlined'
                                                 sx={cssStyle.btn_textfield}
                                                 value={confirmPassword ? confirmPassword : ""}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
+                                                InputProps={{
+                                                    endAdornment: (
+                                                        <InputAdornment position="end"
+                                                            sx={{
+                                                                display: confirmPassword !== "" ? "contents" : "none"
+                                                            }}
+
+                                                        >
+                                                            {confirmPassword.length > 2
+                                                                ?
+                                                                <IconButton onClick={handleToggleConfPassword}>
+                                                                    {showConfPass ? <VisibilityOff /> : <Visibility />}
+                                                                </IconButton>
+                                                                : null
+                                                            }
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
                                             />
                                         </Grid>
                                     }

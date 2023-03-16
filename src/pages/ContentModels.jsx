@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
     Box, Button, Dialog, DialogActions, DialogContent, DialogContentText,
-    DialogTitle, Grid, Typography, TextField, Autocomplete, FormControlLabel, FormGroup, Checkbox, Tooltip
+    DialogTitle, Grid, Typography, TextField, Autocomplete, FormControlLabel, FormGroup, Checkbox, Tooltip, CircularProgress
 } from '@mui/material';
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import { toast } from 'react-toastify';
@@ -119,7 +119,6 @@ const ContentModels = ({
 
     /////////// Get the channel list 
     const channelListFunction = async (userid) => {
-        console.log("userid", userid);
         const userChannelMemberships = await listChannelMembershipsForAppInstanceUser(
             userid
         );
@@ -186,7 +185,11 @@ const ContentModels = ({
         const FilesResponse = response.data;
         if (FilesResponse.status) {
             const FilesData = FilesResponse.data;
-            setUserFiles(FilesData)
+            const newCheckedArray = FilesData.map(checkbox => {
+                const match = folderSelect.filesList.find(obj2 => checkbox.fileId === obj2.fileId);
+                return match ? { ...checkbox, checked: true } : { ...checkbox, checked: false };
+            });
+            setUserFiles(newCheckedArray);
         } else {
             toast.error(FilesResponse.message);
         }
@@ -198,24 +201,24 @@ const ContentModels = ({
             getFilesOfUser(UserId);
         }
     }
-    useEffect(() => {
-        if (activeModel === "AddFileModel") {
-            callGetAllFileFun();
-        }
-    }, [activeModel])
+
 
     //////////// search file by typing file name
     const [srcFileName, setSrcFileName] = useState('');
     const [debouncedSearchTerm] = useDebounce(srcFileName, 500);
+
+
     useEffect(() => {
         if (debouncedSearchTerm !== "") {
             const searchingFiles = userFiles.filter((srcFiles) => srcFiles.fileName.toLowerCase().startsWith(debouncedSearchTerm.toLowerCase()));
             setUserFiles(searchingFiles);
         } else {
-            callGetAllFileFun();
+            if (activeModel === "AddFileModel") {
+                callGetAllFileFun();
+            }
         }
+    }, [activeModel, debouncedSearchTerm])
 
-    }, [debouncedSearchTerm])
 
     //////////////////////////////////////////////
     ///////// adding flie in folder first staging
@@ -239,12 +242,14 @@ const ContentModels = ({
         });
         setUserFiles(updatedCheckboxes);
         const mySelectedFies = updatedCheckboxes.filter((checkedFiles) => checkedFiles.checked === true);
-        setSelectedFile(removeDuplicateObjectFromArray([...selectedFile, ...mySelectedFies], "fileId"));/////remove the dublicaate
+        //  setSelectedFile(removeDuplicateObjectFromArray([...selectedFile, ...mySelectedFies], "fileId"));/////remove the dublicaate
+        setSelectedFile(mySelectedFies);
     }
 
     //////////// adding file api call here
     ////// Add file in folder
     const addIngFileInFolder = async (userId, fileId, selectedFolder) => {
+        
         const addFileInFolderObject = { userId: userId, folderId: selectedFolder, fileId: fileId }
         const response = await axios.post('https://devorganaise.com/api/addFileInFolder', addFileInFolderObject, {
             headers: {
@@ -262,16 +267,22 @@ const ContentModels = ({
     }
 
     ///////// When click on the add file button
+    const [AddBtnDisable, setAddBtnDisable] = useState(false);
     const FinalAddFileInFolder = async () => {
+        if(selectedFile.length === 0) {
+            return null;
+        }
+        setAddBtnDisable(true);
         const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
-
         for (let index = 0; index < selectedFile.length; index++) {
             await addIngFileInFolder(UserId, selectedFile[index], folderSelect._id);
             if (selectedFile.length - 1 === index) {
                 toast.success("Files added successfully");
+                setAddBtnDisable(false);
                 getFoldersData(UserId);
                 handleClose();
             }
+
         }
     }
 
@@ -364,11 +375,6 @@ const ContentModels = ({
     }
 
 
-    useEffect(() => {
-        if (AddAllUsers.length !== 0) {
-            console.log(AddAllUsers);
-        }
-    }, [AddAllUsers])
 
 
 
@@ -656,7 +662,7 @@ const ContentModels = ({
                             <Typography variant="h6" fontWeight={"600"} color="#333333" align='center' mb={1}>Add Files</Typography>
                             <Box >
                                 <Typography variant="subtitle2" align='center' >
-                                    Please select the files you want to add in the ABC folder.
+                                    Please select the files you want to add in the <b>{folderSelect.folderName}</b>&nbsp;folder.
                                 </Typography>
                             </Box>
                         </DialogContentText>
@@ -707,17 +713,32 @@ const ContentModels = ({
                                 <Button
                                     variant="outlined"
                                     size='small'
-                                    sx={{ padding: "5px 30px" }}
-                                    onClick={() => handleClose()}>
+                                    sx={{ padding: "5px 30px", width: "100%" }}
+                                    onClick={() => handleClose()}
+
+
+                                >
                                     Discard
                                 </Button>
                                 <Button
                                     variant="contained"
                                     size='small'
-                                    sx={{ padding: "5px 30px" }}
+                                    sx={{ padding: "5px 30px", width: "100%" }}
                                     onClick={() => FinalAddFileInFolder()}
+                                    disabled={AddBtnDisable}
                                 >
-                                    Add {selectedFile.length === 0 ? "" : selectedFile.length}
+                                    {selectedFile.length === 0 ? "Add" : `Add ${selectedFile.length}`}
+                                    {AddBtnDisable && <CircularProgress
+                                        size={15}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '66%',
+                                            right: '7%',
+                                            marginTop: -12,
+                                            marginLeft: -12,
+                                            color: "primary"
+                                        }}
+                                    />}
                                 </Button>
                             </Box>
                         </Box>
