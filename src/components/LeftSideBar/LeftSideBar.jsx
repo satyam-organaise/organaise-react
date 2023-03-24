@@ -294,6 +294,13 @@ const LeftSideBar = (props) => {
         setNewModelOpen(true);////// Real dilog box open
     }
 
+    const singleMessTeamMemberModel = ()=>{
+        setOpenNewModel(true);/////this change the state in this page and then model show
+        setShow(true);/////active model in diffrent page
+        setActiveModel("SingleMemberChat");/////// which type of model active
+        setNewModelOpen(true);////// Real dilog box open
+    }
+
 
 
     /////////////////////////////////////////////////////
@@ -357,12 +364,16 @@ const LeftSideBar = (props) => {
             props.data.setMessagingActive(true);
         } else {
             if (location.pathname !== "/") {
-                navegate(`/`)
                 setActivePage("mychannel");
+                navegate(`/`)
             }
         }
 
     }
+
+    // search user in new version 
+
+
 
     return (
         <>
@@ -581,6 +592,70 @@ const LeftSideBar = (props) => {
                                     <ListItemText
                                         primary={`Add Channel`}
                                         sx={{ opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" } }}
+                                    />
+                                </ListItem>
+                            </List>
+                        </Box>
+                    </Box>
+                    <Box id="single_user_box">
+                        <Box sx={{ paddingLeft: "25px", paddingRight: "25px" }}>
+                            <Button
+                                id="single-user-inbox-create-button"
+                                aria-controls={open ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={() => navigatePage("")}
+                                variant={activePage === "mychannel" ? "contained" : "text"}
+                                size='small'
+                                sx={{
+                                    width: "100%", justifyContent: 'flex-start',
+                                    color: activePage === "mychannel" ? "#ffffff" : "#646464"
+                                }}
+                                endIcon={<KeyboardArrowDownIcon sx={{ position: "absolute", right: "10px", top: "8px" }} />}
+                            >
+                                <GroupAddIcon sx={{ fontSize: "18px", marginRight: "8px" }} />
+                                <span style={{ fontSize: "13px", textTransform: "capitalize", paddingTop: "2px", }}>
+                                    Inbox
+                                </span>
+                            </Button>
+                        </Box>
+                        <Box>
+                            <List sx={{ padding: "0px" }} >
+                                {/* {channelList.length !== 0 && channelList.map((d) =>
+                                    <ListItem
+                                        sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px", cursor: "pointer" }}
+                                        onClick={() =>
+                                            location.pathname === "/" ? InanotherPage("1", d) : InanotherPage("2", d)
+                                        }
+                                    >    
+                                        <ListItemText
+                                            primary={d.Name.charAt(0).toUpperCase() + d.Name.slice(1)}
+                                            sx={{
+                                                opacity: open ? 1 : 0, marginTop: "4px",
+                                                marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
+                                            }}
+                                        />
+                                    </ListItem>
+                                )
+                                } */}
+                                <ListItem
+                                    sx={{
+                                        paddingTop: "0px", paddingBottom: "0px",
+                                        paddingLeft: "58px", cursor: "pointer"
+                                    }}
+                                    onClick={() => singleMessTeamMemberModel()}
+                                >
+                                    <AddBoxOutlinedIcon
+                                        sx={{
+                                            fontSize: "13px", marginTop: "4px", marginRight: "2px", color: "#333333b4",
+                                        }} />
+                                    <ListItemText
+                                        primary={`Add Mamber`}
+                                        sx={{
+                                            opacity: open ? 1 : 0, marginTop: "4px",
+                                            marginBottom: "0px",
+                                            "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
+                                        }}
                                     />
                                 </ListItem>
                             </List>

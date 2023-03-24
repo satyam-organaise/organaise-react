@@ -22,6 +22,7 @@ import MyMessage from './pages/MyMessage';
 import CompanyDetails from './pages/CompanyDetails';
 import ContentModels from './pages/ContentModels';
 import AllFiles from './pages/AllFiles';
+import ChatProvider from './Context/ChatProvider';
 
 function App() {
   const { pageType } = useParams();
@@ -93,6 +94,7 @@ function App() {
 
 
 
+
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -104,25 +106,27 @@ function App() {
             <Route path="/signup" element={<AuthService serviceType="signup" />} />
           </Routes>
           :
-          <Routes>
-            {/* <Route path="/" element={<Dashboard />} /> */}
-            <Route path="/data" element={<Data userId={userId} />} />{/** Delete code  aafter file upload feaature complete */}
-            <Route path="/message" element={<Message />} />{/** Delete code after creaing new message feature complete */}
-            <Route path="/folder" element={<Folder userId={userId} />} />{/** Delete code after folder feature complete */}
-            <Route path="/companyDetail" element={<CompanyDetails />} />
-            <Route path="/upload" element={<FileUpload />} />
-            <Route path="/create-folder" element={<FolderData userId={userId} />} />
-            <Route path="/" element={<MyMessage userId={userId} />} />
-            <Route path="/model" element={<ContentModels />} />
-            <Route path="/allFiles" element={<AllFiles />} />
+          <ChatProvider>
+            <Routes>
+              {/* <Route path="/" element={<Dashboard />} /> */}
+              <Route path="/data" element={<Data userId={userId} />} />{/** Delete code  aafter file upload feaature complete */}
+              <Route path="/message" element={<Message />} />{/** Delete code after creaing new message feature complete */}
+              <Route path="/folder" element={<Folder userId={userId} />} />{/** Delete code after folder feature complete */}
+              <Route path="/companyDetail" element={<CompanyDetails />} />
+              <Route path="/upload" element={<FileUpload />} />
+              <Route path="/create-folder" element={<FolderData userId={userId} />} />
+              <Route path="/" element={<MyMessage userId={userId} />} />
+              <Route path="/model" element={<ContentModels />} />
+              <Route path="/allFiles" element={<AllFiles />} />
 
-            {/* 
+              {/* 
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/settings" element={<Setting />} /> 
             */}
-            <Route path="/forget-password" element={<ForgetPassword />} />
-            <Route path="*" element={<>404 page</>} />
-          </Routes>
+              <Route path="/forget-password" element={<ForgetPassword />} />
+              <Route path="*" element={<>404 page</>} />
+            </Routes>
+          </ChatProvider>
         }
 
       </ThemeProvider>

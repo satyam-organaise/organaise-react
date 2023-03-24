@@ -37,7 +37,14 @@ const MyMessage = () => {
 
     return (
         <>
-            <LeftSideBar data={{ pageName: "Message", index: 1, setMessagingActive: setMessagingActive, setSelectedChannel: setSelectedChannel }}  >
+            <LeftSideBar
+                data={{
+                    pageName: "Message",
+                    index: 1,
+                    setMessagingActive: setMessagingActive,
+                    setSelectedChannel: setSelectedChannel
+                }}
+            >
 
                 {!messagingActive &&
                     <Box sx={styleCss.fileUploadMainBox}>
@@ -69,6 +76,7 @@ const MyMessage = () => {
                     </Box>
                 }
 
+                {/*Messaging Part here*/}
                 {messagingActive && <NewMessageGrid selectedChannel={selectedChannel} />}
 
                 {openNewModel &&

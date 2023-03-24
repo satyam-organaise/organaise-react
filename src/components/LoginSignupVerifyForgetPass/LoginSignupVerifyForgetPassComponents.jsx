@@ -18,6 +18,7 @@ import {
     otpWithResetPassword, resetPasswordFun
 } from "../../api/CognitoApi/CognitoApi";
 import { passwordValidator } from '../../utils/validation';
+import { userCreateAccount, userLoginAccount } from '../../api/InternalApi/OurDevApi';
 
 
 
@@ -56,7 +57,7 @@ const cssStyle = {
         }
     },
     grid_textBox_button: {
-        margin: "15px 0px"
+        margin: "5px 0px"
     },
 }
 
@@ -67,6 +68,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
     const [OtpValue, setOtpValue] = useState('');////otp value store here
     const [showOtpVeriCont, setShowVeriCon] = useState(false);
     /////Store email address
+    const [fullName, setFullName] = useState("");
     const [emailAddress, setEmailAddress] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -78,12 +80,14 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
     ////////Here we are write the calling api react query function and call the login fuction and resend  confermation mail
     const { mutateAsync: loginApiCall } = useMutation(userSignIn);
+    const { mutateAsync: loginV1 } = useMutation(userLoginAccount);
     const { mutateAsync: resendVerificationMail } = useMutation(resendConfermationEMail);
     const loginAccount = async (email, password) => {
         setBtnDisabled(true);
         const response = await loginApiCall({ username: email.split("@")[0], password: password });
         if (response.status) {
             toast.success("Login successfully");
+            userLoginV1(email, password);
             setTimeout(() => {
                 setBtnDisabled(false);/////login , signup ,forget account btn disaabled after clicking
                 window.location = "/";
@@ -109,19 +113,48 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
     ///////// when click on the signup button then code run 
     const { mutateAsync: SignUpFunCall, isLoading: isLoadingSignUpFun } = useMutation(CognitoSignUp);
-    const createAccount = async (email, password) => {
+    const { mutateAsync: SignUpFunCallV1, isLoading: isLoadingSignUpFunV1 } = useMutation(userCreateAccount);
+    const createAccount = async (name, email, password) => {
         const userName = email.split('@')[0];
         const userEmail = email;
         const userPassword = password;
         const response = await SignUpFunCall({ username: userName, email: userEmail, password: userPassword })
         if (response.status && response.data.userSub) {
             toast.info("Please check your inbox");
-            setShowVeriCon(true);
+            await userInsertv1(name, email, password);
         } else {
             toast.error(response.error.message);
         }
+
+    }
+    const userInsertv1 = async (name, email, password) => {
+        const createUserDetOject = { name, email, password };
+        try {
+            setShowVeriCon(true);
+            const response = await SignUpFunCallV1(createUserDetOject);
+            if (response.status) {
+                console.log("data created in v1");
+            }
+        } catch (error) {
+            console.log(error.response.data.message);
+        }
+
     }
 
+    const userLoginV1 = async (email, password) => {
+        try {
+            const response = await loginV1({ email, password });
+            if (response.status) {
+                localStorage.setItem("userInfo", JSON.stringify(response))
+            } else {
+                console.log("User not login in v1");
+            }
+
+        } catch (error) {
+            console.log(error.response.data.message);
+        }
+
+    }
 
     ///////// Signup otp verification/////////
     const { mutateAsync: SignUpOtpVerification } = useMutation(SignUpOtpVarify);
@@ -137,6 +170,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                     localStorage.clear();
                     const AgainLoginresponse = await loginApiCall({ username: userName, password: password });
                     if (AgainLoginresponse.status) {
+                        userLoginV1(email, password);
                         setVerifyBtnDisabled(false)
                         setTimeout(() => {
                             window.location = "/companyDetail";
@@ -163,8 +197,6 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
     }
 
 
-
-
     //////// change password api call or Reset password code here when user in forget passsword page 
     const { mutateAsync: updatePasswordWithOtp } = useMutation(otpWithResetPassword);
     const updateNewPassword = async (email, GetOtp, newPassword) => {
@@ -185,6 +217,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
     ///////Service type  change then useEffect Run
     useEffect(() => {
+        setFullName("")
         setEmailAddress("");
         setPassword("");
         setConfirmPassword("");
@@ -201,18 +234,18 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
         }
 
         if (serviceType === "signup") {
-            if (emailAddress === "" || password === "" || confirmPassword === "") {
+            if (fullName === "" || emailAddress === "" || password === "" || confirmPassword === "") {
                 toast.error("Please fill all fields.")
                 return null;
             }
-            if (password != confirmPassword) {
+            if (password !== confirmPassword) {
                 toast.error("Password and confirm password not matched.")
                 return null;
             }
             if (!passwordValidator(password) || !passwordValidator(confirmPassword)) {
                 return null;
             }
-            await createAccount(emailAddress, password);
+            await createAccount(fullName, emailAddress, password);
         }
 
         if (serviceType === "forgetPassword") {
@@ -231,7 +264,7 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
     ////////// When click on the verify button
     const otpVerifyBtn = async (serviceType) => {
-        if ((OtpValue == "") || (OtpValue.length != 6)) {
+        if ((OtpValue === "") || (OtpValue.length !== 6)) {
             toast.error("Please enter six digit OTP.");
             return null;
         }
@@ -309,6 +342,20 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                             </Box>
                             <Box sx={cssStyle.box_container_form}>
                                 <Grid container>
+                                    {serviceType === "signup" &&
+                                        <Grid item xs={12} sx={cssStyle.grid_textBox_button}>
+                                            <TextField
+                                                id="signup-name-user"
+                                                label="Full Name"
+                                                variant='outlined'
+                                                type="text"
+                                                sx={cssStyle.btn_textfield}
+                                                value={fullName ? fullName : ""}
+                                                onChange={(e) => setFullName(e?.target?.value)}
+                                            />
+                                        </Grid>
+                                    }
+
                                     <Grid item xs={12} sx={cssStyle.grid_textBox_button}>
                                         <TextField
                                             id="login-signup-forgetPassword-email"
@@ -347,7 +394,10 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
                                                 ),
                                             }}
                                         />
-                                        {/* When service type login then this link show otherwise not visible */}
+                                        {
+                                            /* When service type login then this 
+                                            link show otherwise not visible */
+                                        }
                                         {
                                             serviceType === "login" &&
                                             <Typography variant="subtitle2" align='right'>
@@ -358,7 +408,10 @@ const LoginSignupVerifyForgetPassComponents = ({ serviceType }) => {
 
                                         }
                                     </Grid>
-                                    {/* when service type is forget password then extra input box are show for conferm password */}
+                                    {
+                                        /* when service type is forget password 
+                                        then extra input box are show for conferm password */
+                                    }
                                     {serviceType !== "login" &&
                                         <Grid item xs={12} sx={cssStyle.grid_textBox_button}>
                                             <TextField

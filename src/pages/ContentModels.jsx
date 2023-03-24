@@ -11,7 +11,7 @@ import axios from 'axios';
 import { useDebounce } from 'use-debounce';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { removeFileApi } from '../api/InternalApi/OurDevApi';
+import { removeFileApi, searchUserV1 } from '../api/InternalApi/OurDevApi';
 import appConfig from "../Config";
 import {
     createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito,
@@ -24,6 +24,7 @@ import { getAllUsersFromCognitoIdp, setAuthenticatedUserFromCognito } from "../a
 
 //////////get the all users from congnito ///////////////////
 import { IdentityService } from '../services/IdentityService.js';
+import { useMutation } from 'react-query';
 
 const ContentModels = ({
     activeModel,
@@ -249,7 +250,7 @@ const ContentModels = ({
     //////////// adding file api call here
     ////// Add file in folder
     const addIngFileInFolder = async (userId, fileId, selectedFolder) => {
-        
+
         const addFileInFolderObject = { userId: userId, folderId: selectedFolder, fileId: fileId }
         const response = await axios.post('https://devorganaise.com/api/addFileInFolder', addFileInFolderObject, {
             headers: {
@@ -269,7 +270,7 @@ const ContentModels = ({
     ///////// When click on the add file button
     const [AddBtnDisable, setAddBtnDisable] = useState(false);
     const FinalAddFileInFolder = async () => {
-        if(selectedFile.length === 0) {
+        if (selectedFile.length === 0) {
             return null;
         }
         setAddBtnDisable(true);
@@ -375,9 +376,33 @@ const ContentModels = ({
     }
 
 
+    ////////// search member  in new version 1 and start single chatting
+    const { mutateAsync: MemberSearchV1 } = useMutation(searchUserV1);
+    const [srcMemberText, SetSrcMemberText] = useState("");
+    const [debouncedSearchMember] = useDebounce(srcMemberText, 500);
+    const [listNewMembers, setNewMembersList] = useState([]);
+    const [selectSrcMember, setSelectSrcMem] = useState(null);
+    const searchMemberv1 = async (srcItem) => {
+        try {
+            const response = await MemberSearchV1({ search: srcItem });
+            if (response.length > 0) {
+                console.log(response);
+                setNewMembersList(response);
+            }
+        } catch (error) {
+            console.log(error.response);
+        }
+    }
 
 
+    useEffect(() => {
+        if (debouncedSearchMember) {
+            searchMemberv1(debouncedSearchMember);
+        }
+    }, [debouncedSearchMember])
 
+
+    
 
     return (
         <>
@@ -571,7 +596,7 @@ const ContentModels = ({
                                 </Typography>
                             </Box>
                         </DialogContentText>
-                        <Box container id="add_channel_name" mt={3}>
+                        <Box container id="add_teammate_name" mt={3}>
                             <Box container sx={{ width: "100%" }}>
                                 <Autocomplete
                                     freeSolo
@@ -853,6 +878,113 @@ const ContentModels = ({
                     </DialogActions>
                 </Dialog>
             }
+
+            {/* Add teammate model */}
+            {show && activeModel === "SingleMemberChat" &&
+                <Dialog
+                    open={NewModelOpen}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                    fullWidth={fullWidth}
+                    maxWidth={maxWidth}
+                    disableEscapeKeyDown={true}
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        <Box display={"flex"} justifyContent="end">
+                            <ClearOutlinedIcon sx={{
+                                cursor: "pointer",
+                                color: "#333333",
+                                fontSize: "18px",
+                                borderRadius: "50%",
+                                border: "1px solid #33333342",
+                                padding: "2px"
+                            }} onClick={() => handleClose()} />
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ paddingBottom: "0px" }}>
+                        <DialogContentText id="alert-dialog-description">
+                            <Typography variant="h6" fontWeight={"600"} color="#333333" mb={1}>Search Member </Typography>
+                            <Box >
+                                <Typography variant="subtitle2" >
+                                    Start a chat conversation with your member just search thee member via email or name.
+                                    Chat directly with them for fast solutions.
+                                </Typography>
+                            </Box>
+                        </DialogContentText>
+                        <Box container id="add_member_inbox_name" mt={3}>
+                            <Box container sx={{ width: "100%" }}>
+                                <Autocomplete
+                                    freeSolo
+                                    id="search_member_and_add"
+                                    disableClearable
+                                    options={listNewMembers}
+                                    onChange={(event, newValue) => {
+                                        setSelectSrcMem(newValue);
+                                    }}
+                                    getOptionLabel={(option) => option.name}
+                                    //getOptionSelected={(option, value) => option.email === value.email}
+                                    renderOption={(props, option) => (
+                                        <div {...props}>
+                                            <div>{option.name}</div>
+                                            {/* <div>{option.value}</div> */}
+                                        </div>
+                                    )}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Name Or Email"
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                type: 'search',
+                                            }}
+                                            onChange={(event, newValue) => {
+                                                SetSrcMemberText(event.target.value);
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </Box>
+                            <Box container sx={{ width: "100%" }} mt={1}>
+                                <TextareaAutosize
+                                    minRows={4}
+                                    maxRows={4}
+                                    aria-label="maximum height"
+                                    placeholder="Adding Reason(Maximum 200 Words)"
+                                    defaultValue={""}
+                                    style={{
+                                        padding: "10px 15px",
+                                        fontFamily: "sans-serif", fontSize: "14px", width: "100%",
+                                        height: "80px !important", resize: "none",
+                                        boxSizing: "border-box"
+                                    }}
+                                />
+                            </Box>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Box px={"15px"} py={1.5} container sx={{ width: "100%" }} gap={2} display="flex" justifyContent={"end"}>
+                            <Button
+                                variant="outlined"
+                                size='small'
+                                sx={{ padding: "5px 30px" }}
+                                onClick={() => handleClose()}
+                            >
+                                Discard
+                            </Button>
+                            <Button
+                                variant="contained"
+                                size='small'
+                                sx={{ padding: "5px 30px" }}
+                                onClick={() => selectUserFun()}
+                            >
+                                Start Messaging
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </Dialog>
+            }
+
+
 
         </>
     )

@@ -169,6 +169,14 @@ const NewMessageGrid = ({ selectedChannel }) => {
         }
 
     }, [AllMessagesChannel])
+
+
+    ////////// get the all chats of login user v1
+    useEffect(()=>{
+
+    },[])
+
+
     return (
         <>
             <Box container py="13px" px={"25px"} boxSizing={"border-box"} sx={cssStyle.groupNameBox} display="flex" justifyContent={"space-between"}>

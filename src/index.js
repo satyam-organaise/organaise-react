@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
@@ -10,6 +10,7 @@ import store from "./Redux/Store/store";
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { BrowserRouter } from 'react-router-dom'
+import axios from 'axios';
 
 
 
@@ -20,6 +21,23 @@ const queryClient = new QueryClient({
     }
   }
 })
+
+
+
+
+///// add  intercepter 
+axios.interceptors.request.use(
+  function (config) {
+    if ("userInfo" in localStorage) {
+      config.headers["Auth-Token"] = `Bearer ${(JSON.parse(localStorage.userInfo)).token}`;
+    }
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
+
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
