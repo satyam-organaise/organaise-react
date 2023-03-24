@@ -3,6 +3,7 @@ const devURL = "https://devorganaise.com/api";
 const localUrl = "http://localhost:8000/api";
 
 const UserApiVersion = "/v1/user";
+const ChatApiVersion  = "/v1/chat"
 
 // axios.interceptors.request.use(config => {
 //     config.headers['Content-Type'] = 'application/json';
@@ -59,14 +60,26 @@ export const searchUserV1 = async (getData) => {
 ///////// access the chat /////////////////////
 ///////////------------------------////////////
 
-export const chatAccess = async (getData) => {
-    const response = await axios.post(`${localUrl}${UserApiVersion}/chat`, getData, headerData);
+export const SingleUserchatAccess = async (getData) => {
+    const response = await axios.post(`${localUrl}${ChatApiVersion}`, getData, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
     return response.data
 }
 
+
+////////// ----------------------------- ////////
+////////// fetch chart of group or user//////////
+//////////-------------------------------////////
+
+export const fetchAllChatSingleUserOrGroup =  async(getData)=>{
+    const response = await axios.get(`${localUrl}${ChatApiVersion}`, headerData);
+    if (!response.statusText === "OK") {
+        throw new Error("Something is wrong.");
+    }
+    return response.data
+}
 
 
 

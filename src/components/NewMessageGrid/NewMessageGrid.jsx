@@ -13,11 +13,17 @@ import appConfig from "../../Config";
 import { IdentityService } from '../../services/IdentityService.js';
 import ContentModels from '../../pages/ContentModels';
 import { useLocation } from 'react-router-dom';
+import { ChatState } from '../../Context/ChatProvider';
+import { useMutation } from 'react-query';
+import { fetchAllChatSingleUserOrGroup, fetchChatSingleUserOrGroup } from '../../api/InternalApi/OurDevApi';
 
 
 const NewMessageGrid = ({ selectedChannel }) => {
 
     const location = useLocation();
+
+    ////// use conetext use here
+    const { user, setUser, selectChatV1, setSelectedChatV1, currentChats, setCurrentChats, chats, setChats } = ChatState();
     //////////// Store the userid of user ////////
     const [UserId, setUserId] = useState("");
     ////////// Create and store Identity service //////
@@ -171,42 +177,39 @@ const NewMessageGrid = ({ selectedChannel }) => {
     }, [AllMessagesChannel])
 
 
-    ////////// get the all chats of login user v1
-    useEffect(()=>{
-
-    },[])
 
 
     return (
         <>
             <Box container py="13px" px={"25px"} boxSizing={"border-box"} sx={cssStyle.groupNameBox} display="flex" justifyContent={"space-between"}>
-                {Object.keys(ActiveChannel).length > 3 && <>
-                    <Box display={"flex"}>
-                        <Typography fontWeight={"600"} variant="subtitle2">{ActiveChannel.Name.charAt(0).toUpperCase() + ActiveChannel.Name.slice(1)}</Typography>
-                        <Stack ml={1} direction="row" spacing={-.25}>
-                            <Avatar sx={cssStyle.avatarCss} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
-                            <Avatar sx={cssStyle.avatarCss} alt="Travis Howard" src="https://mui.com/static/images/avatar/2.jpg" />
-                            <Avatar sx={cssStyle.avatarCss} alt="Cindy Baker" src="https://mui.com/static/images/avatar/3.jpg" />
-                        </Stack>
-                    </Box>
-                    <Box>
-                        <Button
-                            sx={{ ...cssStyle.listofPeopeBtn, marginRight: "10px" }}
-                            variant="outlined"
-                            size="small"
-                            onClick={() => modelOpens()}>
-                            Add Member
-                        </Button>
-                        <Button sx={cssStyle.listofPeopeBtn} variant="contained" size="small">
-                            List Of People
-                        </Button>
-                    </Box>
-                </>
-                }
+                {/* {Object.keys(ActiveChannel).length > 3 &&
+                    <>
+                        <Box display={"flex"}>
+                            <Typography fontWeight={"600"} variant="subtitle2">{ActiveChannel.Name.charAt(0).toUpperCase() + ActiveChannel.Name.slice(1)}</Typography>
+                            <Stack ml={1} direction="row" spacing={-.25}>
+                                <Avatar sx={cssStyle.avatarCss} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
+                                <Avatar sx={cssStyle.avatarCss} alt="Travis Howard" src="https://mui.com/static/images/avatar/2.jpg" />
+                                <Avatar sx={cssStyle.avatarCss} alt="Cindy Baker" src="https://mui.com/static/images/avatar/3.jpg" />
+                            </Stack>
+                        </Box>
+                        <Box>
+                            <Button
+                                sx={{ ...cssStyle.listofPeopeBtn, marginRight: "10px" }}
+                                variant="outlined"
+                                size="small"
+                                onClick={() => modelOpens()}>
+                                Add Member
+                            </Button>
+                            <Button sx={cssStyle.listofPeopeBtn} variant="contained" size="small">
+                                List Of People
+                            </Button>
+                        </Box>
+                    </>
+                } */}
             </Box>
             <Box container position={'relative'} id="NewMessageBox" sx={cssStyle.firstBoxMessage}>
                 <Box container position={'absolute'} sx={cssStyle.messageBoxCon} pt={"40px"} pb={"30px"} mt={"0px"} px={"20px"}>
-                    {AllMessagesChannel.length !== 0 &&
+                    {/* {AllMessagesChannel.length !== 0 &&
                         AllMessagesChannel.map((mes) => {
                             if (mes.Sender.Name !== member.username) {
                                 return <Grid id="rec_mess_con_grid" sx={{
@@ -273,57 +276,9 @@ const NewMessageGrid = ({ selectedChannel }) => {
                                     </Grid>
                                 </Grid>
                             }
-                        })}
+                        })} */}
 
 
-                    {/* <Grid id="send_mess_con_grid" container spacing={5}>
-                        <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
-                        </Grid>
-                        <Grid item id="sender_mess_grid" xs={12} md={6}>
-                            <Box container display={'flex'} flexDirection="row-reverse" mb={1} py={0.5}>
-                                <Box id="mess_user_pic_box_send">
-                                    <Stack ml={1} direction="row">
-                                        <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
-                                    </Stack>
-                                </Box>
-                                <Box ml={1}>
-                                    <Grid container>
-                                        <Grid container item display={"flex"} justifyContent="flex-end">
-                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>satyam</Typography>
-                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
-                                        </Grid>
-                                        <Grid container item boxSizing={"border-box"} mr="16px" >
-                                            <Typography variant="body2" sx={cssStyle.sendRealMess} >It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            </Box>
-                        </Grid>
-                    </Grid>
-                    <Grid id="send_mess_con_grid" container spacing={5}>
-                        <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
-                        </Grid>
-                        <Grid item id="sender_mess_grid" xs={12} md={6}>
-                            <Box container display={'flex'} flexDirection="row-reverse" mb={1} py={0.5}>
-                                <Box id="mess_user_pic_box_send">
-                                    <Stack ml={1} direction="row">
-                                        <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
-                                    </Stack>
-                                </Box>
-                                <Box ml={1}>
-                                    <Grid container>
-                                        <Grid container item display={"flex"} justifyContent="flex-end">
-                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>satyam</Typography>
-                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
-                                        </Grid>
-                                        <Grid container item boxSizing={"border-box"} mr="16px" >
-                                            <Typography variant="body2" sx={cssStyle.sendRealMess} >It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            </Box>
-                        </Grid>
-                    </Grid> */}
                 </Box>
                 <Box position={'absolute'} sx={{ width: "100%", bottom: "0px", backgroundColor: "#ffffff" }} py={"10px"} container px={"25px"}>
                     <Box container

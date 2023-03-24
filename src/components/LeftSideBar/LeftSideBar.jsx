@@ -39,9 +39,11 @@ import appConfig from "../../Config";
 //////////get the all users from congnito ///////////////////
 import { IdentityService } from '../../services/IdentityService.js';
 import { useMutation } from 'react-query';
-import { getCompanyName } from '../../api/InternalApi/OurDevApi';
+import { fetchAllChatSingleUserOrGroup, getCompanyName } from '../../api/InternalApi/OurDevApi';
 import { toast } from 'react-toastify';
 import BusinessIcon from '@mui/icons-material/Business';
+import { ChatState } from '../../Context/ChatProvider';
+import { getSender } from '../../utils/chatLogic';
 
 const drawerWidth = 220;
 
@@ -167,6 +169,9 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 const LeftSideBar = (props) => {
 
+
+    ////// use conetext use here
+    const { user, setUser, selectChatV1, setSelectedChatV1, currentChats, setCurrentChats, chats, setChats } = ChatState();
     const theme = useTheme();
     const navegate = useNavigate();
     const location = useLocation();
@@ -294,7 +299,7 @@ const LeftSideBar = (props) => {
         setNewModelOpen(true);////// Real dilog box open
     }
 
-    const singleMessTeamMemberModel = ()=>{
+    const singleMessTeamMemberModel = () => {
         setOpenNewModel(true);/////this change the state in this page and then model show
         setShow(true);/////active model in diffrent page
         setActiveModel("SingleMemberChat");/////// which type of model active
@@ -360,6 +365,7 @@ const LeftSideBar = (props) => {
     //when user in another page and want to acccess messaging part
     const InanotherPage = async (type, data) => {
         if (type === "1") {
+            console.log(data);
             props.data.setSelectedChannel(data);
             props.data.setMessagingActive(true);
         } else {
@@ -368,11 +374,27 @@ const LeftSideBar = (props) => {
                 navegate(`/`)
             }
         }
-
     }
 
-    // search user in new version 
 
+    /////// get the chat of selected group or selected member v1
+    const { mutateAsync: userGroupFetchChat } = useMutation(fetchAllChatSingleUserOrGroup);
+    const [loggedUser, setLoggedUser] = useState(null);
+    const fetchChat = async () => {
+        try {
+            const response = await userGroupFetchChat();
+            if (response) {
+                setChats(response);
+                setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
+            }
+        } catch (error) {
+            console.log("NewMessageGrid", error.response);
+        }
+    }
+    ////// If selected chat  value change then  this use effect run
+    useEffect(() => {
+        fetchChat();
+    }, [])
 
 
     return (
@@ -621,7 +643,7 @@ const LeftSideBar = (props) => {
                         </Box>
                         <Box>
                             <List sx={{ padding: "0px" }} >
-                                {/* {channelList.length !== 0 && channelList.map((d) =>
+                                {chats.length !== 0 && chats.map((d) =>
                                     <ListItem
                                         sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px", cursor: "pointer" }}
                                         onClick={() =>
@@ -629,7 +651,9 @@ const LeftSideBar = (props) => {
                                         }
                                     >    
                                         <ListItemText
-                                            primary={d.Name.charAt(0).toUpperCase() + d.Name.slice(1)}
+                                            primary={
+                                                !d.isGroupChat ? getSender(loggedUser , d.users) : (d.chatName)
+                                            }
                                             sx={{
                                                 opacity: open ? 1 : 0, marginTop: "4px",
                                                 marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
@@ -637,7 +661,7 @@ const LeftSideBar = (props) => {
                                         />
                                     </ListItem>
                                 )
-                                } */}
+                                }
                                 <ListItem
                                     sx={{
                                         paddingTop: "0px", paddingBottom: "0px",
@@ -866,6 +890,7 @@ const LeftSideBar = (props) => {
                     setShow={setShow}
                     setActiveModel={setActiveModel}
                     setNewModelOpen={setNewModelOpen}
+                    InanotherPage={InanotherPage}
                 />
             }
         </>

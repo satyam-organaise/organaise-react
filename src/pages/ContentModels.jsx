@@ -11,7 +11,7 @@ import axios from 'axios';
 import { useDebounce } from 'use-debounce';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { removeFileApi, searchUserV1 } from '../api/InternalApi/OurDevApi';
+import { removeFileApi, searchUserV1, SingleUserchatAccess } from '../api/InternalApi/OurDevApi';
 import appConfig from "../Config";
 import {
     createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito,
@@ -25,6 +25,7 @@ import { getAllUsersFromCognitoIdp, setAuthenticatedUserFromCognito } from "../a
 //////////get the all users from congnito ///////////////////
 import { IdentityService } from '../services/IdentityService.js';
 import { useMutation } from 'react-query';
+import { ChatState } from '../Context/ChatProvider';
 
 const ContentModels = ({
     activeModel,
@@ -36,11 +37,15 @@ const ContentModels = ({
     setNewModelOpen,
     getFoldersData,
     folderSelect,
-    ActiveChannel,
+    ActiveChannel,InanotherPage
 }) => {
     const navigate = useNavigate();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('xs');
+
+
+    ////// use conetext use here
+    const { user, setUser, selectChatV1, setSelectedChatV1, currentChats, setCurrentChats } = ChatState();
 
     const location = useLocation();
     ////////// Create and store Identity service //////
@@ -91,7 +96,7 @@ const ContentModels = ({
             toast.info("Please enter channel name");
             return;
         }
-        if (channelName != null && channelName != "") {
+        if (channelName != null && channelName !== "") {
             const creatChannelObj = {
                 "instenceArn": `${appConfig.appInstanceArn}`,
                 "metaData": null,
@@ -394,6 +399,24 @@ const ContentModels = ({
         }
     }
 
+    ///////// Sigle user chat create function 
+    const { mutateAsync: creatSingleMemChatV1 } = useMutation(SingleUserchatAccess);
+    const createSingleChatV1 = async () => {
+        const selectUserIdMem = selectSrcMember._id;
+        try {
+            const response = await creatSingleMemChatV1({ userId: selectUserIdMem });
+            if (response) {
+                console.log("chat created successfully");
+                setSelectedChatV1(response);
+                InanotherPage("1", response)
+                handleClose();
+            }
+        } catch (error) {
+            console.log(error.response);
+        }
+
+    }
+
 
     useEffect(() => {
         if (debouncedSearchMember) {
@@ -402,7 +425,7 @@ const ContentModels = ({
     }, [debouncedSearchMember])
 
 
-    
+
 
     return (
         <>
@@ -975,7 +998,7 @@ const ContentModels = ({
                                 variant="contained"
                                 size='small'
                                 sx={{ padding: "5px 30px" }}
-                                onClick={() => selectUserFun()}
+                                onClick={() => createSingleChatV1()}
                             >
                                 Start Messaging
                             </Button>
