@@ -295,7 +295,7 @@ const LeftSideBar = (props) => {
     const modelOpens = () => {
         setOpenNewModel(true);/////this change the state in this page and then model show
         setShow(true);/////active model in diffrent page
-        setActiveModel("AddChannel");/////// which type of model active
+        setActiveModel("CreateGroup");/////// which type of model active
         setNewModelOpen(true);////// Real dilog box open
     }
 
@@ -365,8 +365,8 @@ const LeftSideBar = (props) => {
     //when user in another page and want to acccess messaging part
     const InanotherPage = async (type, data) => {
         if (type === "1") {
-            console.log(data);
-            props.data.setSelectedChannel(data);
+            setSelectedChatV1(data);
+            // props.data.setSelectedChannel(data);
             props.data.setMessagingActive(true);
         } else {
             if (location.pathname !== "/") {
@@ -583,22 +583,28 @@ const LeftSideBar = (props) => {
                                         }}
                                     />
                                 </ListItem> */}
-                                {channelList.length !== 0 && channelList.map((d) =>
-                                    <ListItem
-                                        sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px", cursor: "pointer" }}
-                                        onClick={() =>
-                                            location.pathname === "/" ? InanotherPage("1", d) : InanotherPage("2", d)
-                                        }
-                                    >
-                                        <ListItemText
-                                            primary={d.Name.charAt(0).toUpperCase() + d.Name.slice(1)}
-                                            sx={{
-                                                opacity: open ? 1 : 0, marginTop: "4px",
-                                                marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
-                                            }}
-                                        />
-                                    </ListItem>
-                                )
+                                {
+                                    //channelList.length !== 0 && channelList.map((d) =>
+                                    chats.length !== 0 && chats.map((d) =>
+                                        <ListItem
+                                            sx={{ paddingTop: "0px", paddingBottom: "0px", paddingLeft: "60px", cursor: "pointer" }}
+                                            onClick={() =>
+                                                location.pathname === "/" ? InanotherPage("1", d) : InanotherPage("2", d)
+                                            }
+                                        >
+                                            <ListItemText
+                                                primary={
+                                                    //    d.Name.charAt(0).toUpperCase() + d.Name.slice(1)
+                                                    Object.keys(d).length > 0 &&
+                                                    (d?.isGroupChat && (d?.chatName))
+                                                }
+                                                sx={{
+                                                    opacity: open ? 1 : 0, marginTop: "4px",
+                                                    marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
+                                                }}
+                                            />
+                                        </ListItem>
+                                    )
                                 }
                                 <ListItem
                                     sx={{
@@ -612,8 +618,12 @@ const LeftSideBar = (props) => {
                                             fontSize: "13px", marginTop: "4px", marginRight: "2px", color: "#333333b4",
                                         }} />
                                     <ListItemText
-                                        primary={`Add Channel`}
-                                        sx={{ opacity: open ? 1 : 0, marginTop: "4px", marginBottom: "0px", "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" } }}
+                                        primary={`Create Group`}
+                                        sx={{
+                                            opacity: open ? 1 : 0,
+                                            marginTop: "4px", marginBottom: "0px",
+                                            "& span": { fontSize: "13px", fontWeight: 500, color: "#333333b5" }
+                                        }}
                                     />
                                 </ListItem>
                             </List>
@@ -649,10 +659,11 @@ const LeftSideBar = (props) => {
                                         onClick={() =>
                                             location.pathname === "/" ? InanotherPage("1", d) : InanotherPage("2", d)
                                         }
-                                    >    
+                                    >
                                         <ListItemText
                                             primary={
-                                                !d.isGroupChat ? getSender(loggedUser , d.users) : (d.chatName)
+                                                Object.keys(d).length > 0 &&
+                                                (!d?.isGroupChat && getSender(user, d.users) )
                                             }
                                             sx={{
                                                 opacity: open ? 1 : 0, marginTop: "4px",

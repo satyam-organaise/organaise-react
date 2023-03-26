@@ -15,7 +15,8 @@ import ContentModels from '../../pages/ContentModels';
 import { useLocation } from 'react-router-dom';
 import { ChatState } from '../../Context/ChatProvider';
 import { useMutation } from 'react-query';
-import { fetchAllChatSingleUserOrGroup, fetchChatSingleUserOrGroup } from '../../api/InternalApi/OurDevApi';
+import { fetchAllChatSingleUserOrGroup, fetchChatSingleUserOrGroup, fetchMessagesV1, sendV1Message } from '../../api/InternalApi/OurDevApi';
+import { getSender } from '../../utils/chatLogic';
 
 
 const NewMessageGrid = ({ selectedChannel }) => {
@@ -146,35 +147,84 @@ const NewMessageGrid = ({ selectedChannel }) => {
         userId: '',
     });
 
+    const setNewMessaageFun = (event) => {
+        setNewMessage(event.target.value);
+    }
+
     ////////// Send message here //////
     const sendMessageByUser = async (ActiveChannel, sendingMessgeHere, member) => {
-        await sendChannelMessage(ActiveChannel.ChannelArn, sendingMessgeHere, "PERSISTENT", "STANDARD", member, undefined, null).then((messData) => {
-            listChannelMessages(ActiveChannel.ChannelArn, UserId, undefined, null).then((md) => {
-                setNewMessage("");
-                setAllMessgesOfChannel(md.Messages);
+        await sendChannelMessage(ActiveChannel.ChannelArn, sendingMessgeHere, "PERSISTENT", "STANDARD", member, undefined, null)
+            .then((messData) => {
+                listChannelMessages(ActiveChannel.ChannelArn, UserId, undefined, null).then((md) => {
+                    setNewMessage("");
+                    setAllMessgesOfChannel(md.Messages);
+                }).catch((error) => {
+                    console.log("error", error);
+                })
             }).catch((error) => {
-                console.log("error", error);
+                console.log("message Sending error", error)
             })
-        }).catch((error) => {
-            console.log("message Sending error", error)
-        })
 
     }
+
+    ////////// send message in new version //////
+    const { mutateAsync: sendingMessageV1 } = useMutation(sendV1Message);
+    const sendMessagev1 = async (message) => {
+        try {
+            const sendingMessData = {
+                content: message,
+                chatId: selectChatV1._id
+            }
+            setNewMessage("");
+            const response = await sendingMessageV1(sendingMessData);
+            setCurrentChats([...currentChats, response])
+            fetchAllMessV1(selectChatV1._id);
+        } catch (error) {
+            console.log(error.response);
+        }
+    }
+
     const handleEnterKeyPress = (event) => {
         if (event.key === 'Enter') {
             if (newMessage !== "") {
-                sendMessageByUser(ActiveChannel, newMessage, member)
+                //sendMessageByUser(ActiveChannel, newMessage, member)
+                sendMessagev1(newMessage);
             }
 
         }
     };
 
+
+    /////////////// fetch message of chats in  new version /////////////
+    const { mutateAsync: fetchingAllMess } = useMutation(fetchMessagesV1);
+    const fetchAllMessV1 = async (chatId) => {
+        try {
+            const response = await fetchingAllMess({ chatId });
+            setCurrentChats([response])
+        } catch (error) {
+            console.log(error.response);
+        }
+    }
+
     useEffect(() => {
         if (AllMessagesChannel.length !== 0) {
             console.log(AllMessagesChannel);
         }
-
     }, [AllMessagesChannel])
+
+
+    /////////////////////// Here we are create new state for new Version  Apis ////////////////
+    const [MyActiveChat, setMyActiveChat] = useState({});
+
+    useEffect(() => {
+        if (selectChatV1?._id) {
+            setMyActiveChat(selectChatV1)
+            setCurrentChats([]);
+            fetchAllMessV1(selectChatV1._id)
+            console.log(user._id);
+        }
+    }, [selectChatV1._id])
+
 
 
 
@@ -182,10 +232,18 @@ const NewMessageGrid = ({ selectedChannel }) => {
     return (
         <>
             <Box container py="13px" px={"25px"} boxSizing={"border-box"} sx={cssStyle.groupNameBox} display="flex" justifyContent={"space-between"}>
-                {/* {Object.keys(ActiveChannel).length > 3 &&
+                {
+                    //Object.keys(ActiveChannel).length > 3 &&
+                    //Object.keys(MyActiveChat).lenght > 0 &&
                     <>
                         <Box display={"flex"}>
-                            <Typography fontWeight={"600"} variant="subtitle2">{ActiveChannel.Name.charAt(0).toUpperCase() + ActiveChannel.Name.slice(1)}</Typography>
+                            <Typography fontWeight={"600"}
+                                variant="subtitle2">
+                                {/* {ActiveChannel.Name.charAt(0).toUpperCase() + ActiveChannel.Name.slice(1)} */}
+                                {Object.keys(MyActiveChat).length > 0 &&
+                                    (!MyActiveChat.isGroupChat ? getSender(user, MyActiveChat?.users) : (MyActiveChat.chatName))
+                                }
+                            </Typography>
                             <Stack ml={1} direction="row" spacing={-.25}>
                                 <Avatar sx={cssStyle.avatarCss} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
                                 <Avatar sx={cssStyle.avatarCss} alt="Travis Howard" src="https://mui.com/static/images/avatar/2.jpg" />
@@ -205,79 +263,171 @@ const NewMessageGrid = ({ selectedChannel }) => {
                             </Button>
                         </Box>
                     </>
-                } */}
+                }
+
             </Box>
             <Box container position={'relative'} id="NewMessageBox" sx={cssStyle.firstBoxMessage}>
                 <Box container position={'absolute'} sx={cssStyle.messageBoxCon} pt={"40px"} pb={"30px"} mt={"0px"} px={"20px"}>
-                    {/* {AllMessagesChannel.length !== 0 &&
-                        AllMessagesChannel.map((mes) => {
-                            if (mes.Sender.Name !== member.username) {
-                                return <Grid id="rec_mess_con_grid" sx={{
-                                    marginTop: "0px", width: "100%", marginLeft: "0px",
-                                    boxSizing: "borderBox",
-                                }} container spacing={5}>
-                                    <Grid id="reciver_mess_grid" sx={{ paddingTop: "10px !important", paddingLeft: "0px !important" }} item xs={12} md={6}>
-                                        <Box container display={'flex'} mb={1} py={0.5}>
-                                            <Box id="mess_user_pic_box">
-                                                <Stack ml={1} direction="row">
-                                                    <Avatar
-                                                        sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }}
-                                                        alt="Remy Sharp"
-                                                        src="https://mui.com/static/images/avatar/1.jpg" />
-                                                </Stack>
-                                            </Box>
-                                            <Box ml={1}>
-                                                <Grid container>
-                                                    <Grid container item>
-                                                        <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
-                                                            {mes.Sender.Name}
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                    {
+                        /* 
+                        {AllMessagesChannel.length !== 0 &&
+                            AllMessagesChannel.map((mes) => {
+                                if (mes.Sender.Name !== member.username) {
+                                    return <Grid id="rec_mess_con_grid" sx={{
+                                        marginTop: "0px", width: "100%", marginLeft: "0px",
+                                        boxSizing: "borderBox",
+                                    }} container spacing={5}>
+                                        <Grid id="reciver_mess_grid" sx={{ paddingTop: "10px !important", paddingLeft: "0px !important" }} item xs={12} md={6}>
+                                            <Box container display={'flex'} mb={1} py={0.5}>
+                                                <Box id="mess_user_pic_box">
+                                                    <Stack ml={1} direction="row">
+                                                        <Avatar
+                                                            sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }}
+                                                            alt="Remy Sharp"
+                                                            src="https://mui.com/static/images/avatar/1.jpg" />
+                                                    </Stack>
+                                                </Box>
+                                                <Box ml={1}>
+                                                    <Grid container>
+                                                        <Grid container item>
+                                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
+                                                                {mes.Sender.Name}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                                                        </Grid>
+                                                        <Grid container item boxSizing={"border-box"} mr="16px" >
+                                                            <Typography variant="body2" sx={cssStyle.recRealMess} >
+                                                                {mes.Content}
+                                                            </Typography>
+                                                        </Grid>
                                                     </Grid>
-                                                    <Grid container item boxSizing={"border-box"} mr="16px" >
-                                                        <Typography variant="body2" sx={cssStyle.recRealMess} >
-                                                            {mes.Content}
-                                                        </Typography>
-                                                    </Grid>
-                                                </Grid>
+                                                </Box>
                                             </Box>
-                                        </Box>
+                                        </Grid>
+                                        <Grid id="empty_reciver_mess_grid" item display={{ xs: "none", md: "block" }} xs={12} md={6}>
+                                        </Grid>
                                     </Grid>
-                                    <Grid id="empty_reciver_mess_grid" item display={{ xs: "none", md: "block" }} xs={12} md={6}>
-                                    </Grid>
-                                </Grid>
-                            } else {
-                                return <Grid id="send_mess_con_grid" container spacing={5}>
-                                    <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
-                                    </Grid>
-                                    <Grid item id="sender_mess_grid" xs={12} md={6}>
-                                        <Box container display={'flex'} flexDirection="row-reverse" mb={1} py={0.5}>
-                                            <Box id="mess_user_pic_box_send">
-                                                <Stack ml={1} direction="row">
-                                                    <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
-                                                </Stack>
-                                            </Box>
-                                            <Box ml={1}>
-                                                <Grid container>
-                                                    <Grid container item display={"flex"} justifyContent="flex-end">
-                                                        <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
-                                                            {mes.Sender.Name}
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                                } else {
+                                    return <Grid id="send_mess_con_grid" container spacing={5}>
+                                        <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
+                                        </Grid>
+                                        <Grid item id="sender_mess_grid" xs={12} md={6}>
+                                            <Box container display={'flex'} flexDirection="row-reverse" mb={1} py={0.5}>
+                                                <Box id="mess_user_pic_box_send">
+                                                    <Stack ml={1} direction="row">
+                                                        <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
+                                                    </Stack>
+                                                </Box>
+                                                <Box ml={1}>
+                                                    <Grid container>
+                                                        <Grid container item display={"flex"} justifyContent="flex-end">
+                                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
+                                                                {mes.Sender.Name}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                                                        </Grid>
+                                                        <Grid container item boxSizing={"border-box"} mr="16px" display={"flex"} justifyContent="end">
+                                                            <Typography variant="body2" sx={{ ...cssStyle.sendRealMess, width: "auto", textAlign: "right" }} >
+                                                                {mes.Content}
+                                                            </Typography>
+                                                        </Grid>
                                                     </Grid>
-                                                    <Grid container item boxSizing={"border-box"} mr="16px" display={"flex"} justifyContent="end">
-                                                        <Typography variant="body2" sx={{ ...cssStyle.sendRealMess, width: "auto", textAlign: "right" }} >
-                                                            {mes.Content}
-                                                        </Typography>
-                                                    </Grid>
-                                                </Grid>
+                                                </Box>
                                             </Box>
-                                        </Box>
+                                        </Grid>
                                     </Grid>
-                                </Grid>
-                            }
-                        })} */}
+                                }
+                            })} 
+                            
+                            */
+                    }
 
+                    {currentChats.length > 0 &&
+                        <>
+
+                            {currentChats[0].map((mes, index) => {
+
+                                if (mes.sender._id !== user._id) {
+                                    return <Grid
+                                        id="rec_mess_con_grid"
+                                        sx={{
+                                            marginTop: "0px", width: "100%", marginLeft: "0px",
+                                            boxSizing: "borderBox",
+                                        }}
+                                        container
+                                        spacing={5}
+                                        key={`message_left_revicer_${index}`}
+                                    >
+                                        <Grid id="reciver_mess_grid"
+                                            sx={{ paddingTop: "10px !important", paddingLeft: "0px !important" }}
+                                            item xs={12} md={6}
+                                        >
+                                            <Box container display={'flex'} mb={1} py={0.5}>
+                                                <Box id="mess_user_pic_box">
+                                                    <Stack ml={1} direction="row">
+                                                        <Avatar
+                                                            sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }}
+                                                            alt="Remy Sharp"
+                                                            src="https://mui.com/static/images/avatar/1.jpg" />
+                                                    </Stack>
+                                                </Box>
+                                                <Box ml={1}>
+                                                    <Grid container>
+                                                        <Grid container item>
+                                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
+                                                                {mes.sender.name}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                                                        </Grid>
+                                                        <Grid container item boxSizing={"border-box"} mr="16px" >
+                                                            <Typography variant="body2" sx={cssStyle.recRealMess} >
+                                                                {mes.content}
+                                                            </Typography>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Box>
+                                            </Box>
+                                        </Grid>
+                                        <Grid id="empty_reciver_mess_grid" item display={{ xs: "none", md: "block" }} xs={12} md={6}>
+                                        </Grid>
+                                    </Grid>
+                                } else {
+                                    return <Grid
+                                        id="send_mess_con_grid"
+                                        container
+                                        spacing={5}
+                                        key={`mess_sender_${index}`}
+                                    >
+                                        <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
+                                        </Grid>
+                                        <Grid item id="sender_mess_grid" xs={12} md={6}>
+                                            <Box container display={'flex'} flexDirection="row-reverse" mb={1} py={0.5}>
+                                                <Box id="mess_user_pic_box_send">
+                                                    <Stack ml={1} direction="row">
+                                                        <Avatar sx={{ ...cssStyle.avatarCss, width: "30px", height: "30px" }} alt="Remy Sharp" src="https://mui.com/static/images/avatar/1.jpg" />
+                                                    </Stack>
+                                                </Box>
+                                                <Box ml={1}>
+                                                    <Grid container>
+                                                        <Grid container item display={"flex"} justifyContent="flex-end">
+                                                            <Typography variant="subtitle2" fontWeight={"700"} textTransform={'capitalize'}>
+                                                                {mes.sender.name}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={cssStyle.timeRecMess} >10:30 AM</Typography>
+                                                        </Grid>
+                                                        <Grid container item boxSizing={"border-box"} mr="16px" display={"flex"} justifyContent="end">
+                                                            <Typography variant="body2" sx={{ ...cssStyle.sendRealMess, width: "auto", textAlign: "right" }} >
+                                                                {mes.content}
+                                                            </Typography>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Box>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                }
+                            })}
+                        </>}
 
                 </Box>
                 <Box position={'absolute'} sx={{ width: "100%", bottom: "0px", backgroundColor: "#ffffff" }} py={"10px"} container px={"25px"}>
@@ -293,7 +443,7 @@ const NewMessageGrid = ({ selectedChannel }) => {
                             placeholder='Type a message'
                             id="messageInput"
                             value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
+                            onChange={(e) => setNewMessaageFun(e)}
                             onKeyPress={handleEnterKeyPress}
 
                         />

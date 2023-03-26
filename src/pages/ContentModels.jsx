@@ -11,7 +11,7 @@ import axios from 'axios';
 import { useDebounce } from 'use-debounce';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { removeFileApi, searchUserV1, SingleUserchatAccess } from '../api/InternalApi/OurDevApi';
+import { createGroupChat, removeFileApi, searchUserV1, SingleUserchatAccess } from '../api/InternalApi/OurDevApi';
 import appConfig from "../Config";
 import {
     createChannel, describeChannel, listChannelMembershipsForAppInstanceUser, getAwsCredentialsFromCognito,
@@ -37,7 +37,7 @@ const ContentModels = ({
     setNewModelOpen,
     getFoldersData,
     folderSelect,
-    ActiveChannel,InanotherPage
+    ActiveChannel, InanotherPage
 }) => {
     const navigate = useNavigate();
     const [fullWidth, setFullWidth] = React.useState(true);
@@ -45,7 +45,7 @@ const ContentModels = ({
 
 
     ////// use conetext use here
-    const { user, setUser, selectChatV1, setSelectedChatV1, currentChats, setCurrentChats } = ChatState();
+    const { user, setUser, selectChatV1, setSelectedChatV1, currentChats, setCurrentChats, chats, setChats } = ChatState();
 
     const location = useLocation();
     ////////// Create and store Identity service //////
@@ -391,7 +391,6 @@ const ContentModels = ({
         try {
             const response = await MemberSearchV1({ search: srcItem });
             if (response.length > 0) {
-                console.log(response);
                 setNewMembersList(response);
             }
         } catch (error) {
@@ -399,7 +398,7 @@ const ContentModels = ({
         }
     }
 
-    ///////// Sigle user chat create function 
+    ///////// Single user chat create function 
     const { mutateAsync: creatSingleMemChatV1 } = useMutation(SingleUserchatAccess);
     const createSingleChatV1 = async () => {
         const selectUserIdMem = selectSrcMember._id;
@@ -417,12 +416,54 @@ const ContentModels = ({
 
     }
 
-
     useEffect(() => {
         if (debouncedSearchMember) {
             searchMemberv1(debouncedSearchMember);
         }
     }, [debouncedSearchMember])
+
+
+    ///////////-------------------------////////////
+    /////////// Create group code here /////////////
+    ///////////-------------------------////////////
+    const [groupNameStore, setGroupName] = useState("");
+    const [srcMemName, setSrcMemberName] = useState("");
+    const [deMemSearchName] = useDebounce(srcMemName);
+    const [selectedMemStore, setSelectedMemStore] = useState([]);
+    const { mutateAsync: createChatFun } = useMutation(createGroupChat);
+
+    ////////// set search member list /////////////////
+    useEffect(() => {
+        if (deMemSearchName) {
+            searchMemberv1(deMemSearchName);
+        }
+    }, [deMemSearchName])
+
+    const SetMembersFun = (event, values) => {
+        setSelectedMemStore(values);
+    };
+    ////////// when click on the create group function
+    const createGroupFun = async () => {
+        if (groupNameStore === "") {
+            toast.info("Please enter group name.")
+            return null;
+        }
+        if (selectedMemStore.length === 0) {
+            toast.info("Please select atleast one member.")
+            return null;
+        }
+        try {
+            const createObj = {
+                name: groupNameStore,
+                users: JSON.stringify(selectedMemStore.map((u) => u._id)),
+            }
+            const response = await createChatFun(createObj);
+            setChats([response, ...chats]);
+        } catch (error) {
+            console.log(error.response);
+        }
+    }
+
 
 
 
@@ -1001,6 +1042,104 @@ const ContentModels = ({
                                 onClick={() => createSingleChatV1()}
                             >
                                 Start Messaging
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </Dialog>
+            }
+
+            {/* Create group */}
+            {show && activeModel === "CreateGroup" &&
+                <Dialog
+                    open={NewModelOpen}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                    fullWidth={fullWidth}
+                    maxWidth={maxWidth}
+                    disableEscapeKeyDown={true}
+                >
+                    <DialogTitle id="alert-dialog-create-group-title">
+                        <Box display={"flex"} justifyContent="end">
+                            <ClearOutlinedIcon sx={{
+                                cursor: "pointer",
+                                color: "#333333",
+                                fontSize: "18px",
+                                borderRadius: "50%",
+                                border: "1px solid #33333342",
+                                padding: "2px"
+                            }} onClick={() => handleClose()} />
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ paddingBottom: "0px" }}>
+                        <DialogContentText id="alert-dialog-create-group-description">
+                            <Typography variant="h6" fontWeight={"600"} color="#333333" mb={1}>Create Group</Typography>
+                            <Box >
+                                <Typography variant="subtitle2" >
+                                    Start a chat conversation with creating Group and add
+                                    your teammates.
+                                </Typography>
+                            </Box>
+                        </DialogContentText>
+                        <Box container id="add_group_name" mt={2}>
+                            <Box container sx={{ width: "100%" }}>
+                                <TextField
+                                    id="group_name_input"
+                                    label="Group name"
+                                    size='small'
+                                    sx={{ width: "100%" }}
+                                    value={groupNameStore}
+                                    onChange={(e) => setGroupName(e.target.value)}
+                                />
+                            </Box>
+                            {/* <Box container sx={{ width: "100%" }} mt={1}>
+                                <TextareaAutosize
+                                    minRows={4}
+                                    maxRows={4}
+                                    aria-label="maximum height"
+                                    placeholder="Channel Description (Maximum 200 Words)"
+                                    defaultValue={""}
+                                    style={{ padding: "10px 15px", fontFamily: "sans-serif", fontSize: "14px", width: "100%", height: "80px !important", resize: "none", boxSizing: "border-box" }}
+                                    onChange={(e) => setChannelDiscription(e.target.value)}
+                                />
+                            </Box> */}
+                            <Box container sx={{ width: "100%" }} mt={2}>
+                                <Autocomplete
+                                    multiple
+                                    id="selected_mem_autocom"
+                                    options={listNewMembers}
+                                    getOptionLabel={(option) => option.name}
+                                    //defaultValue={[selectedMemStore]}
+                                    onChange={SetMembersFun}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            variant="standard"
+                                            label="Select Member"
+                                            placeholder="Search Member"
+                                            onChange={(event) => setSrcMemberName(event.target.value)}
+                                        />
+                                    )}
+                                />
+                            </Box>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Box px={"15px"} py={1.5} container sx={{ width: "100%" }} gap={2} display="flex" justifyContent={"end"}>
+                            <Button
+                                variant="outlined"
+                                size='small'
+                                sx={{ padding: "5px 30px" }}
+                                onClick={() => handleClose()}
+                            >
+                                Discard
+                            </Button>
+                            <Button
+                                variant="contained"
+                                size='small'
+                                sx={{ padding: "5px 30px" }}
+                                onClick={() => createGroupFun()}
+                            >
+                                Create Group
                             </Button>
                         </Box>
                     </DialogActions>

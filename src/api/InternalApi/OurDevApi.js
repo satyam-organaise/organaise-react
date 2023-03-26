@@ -3,7 +3,8 @@ const devURL = "https://devorganaise.com/api";
 const localUrl = "http://localhost:8000/api";
 
 const UserApiVersion = "/v1/user";
-const ChatApiVersion  = "/v1/chat"
+const ChatApiVersion = "/v1/chat";
+const MessageApiVersion = "/v1/message";
 
 // axios.interceptors.request.use(config => {
 //     config.headers['Content-Type'] = 'application/json';
@@ -73,13 +74,51 @@ export const SingleUserchatAccess = async (getData) => {
 ////////// fetch chart of group or user//////////
 //////////-------------------------------////////
 
-export const fetchAllChatSingleUserOrGroup =  async(getData)=>{
+export const fetchAllChatSingleUserOrGroup = async (getData) => {
     const response = await axios.get(`${localUrl}${ChatApiVersion}`, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
     return response.data
 }
+
+
+
+export const createGroupChat = async (getData) => {
+    const response = await axios.post(`${localUrl}${ChatApiVersion}/group`, getData, headerData);
+    if (!response.statusText === "OK") {
+        throw new Error("Something is wrong.");
+    }
+    return response.data
+}
+
+
+/////////////----------------------------///////////
+///////////// sending message here /////////////////
+/////////////----------------------------///////////
+
+export const sendV1Message = async (getData) => {
+    const response = await axios.post(`${localUrl}${MessageApiVersion}`, getData, headerData);
+    if (!response.statusText === "OK") {
+        throw new Error("Something is wrong.");
+    }
+    return response.data;
+}
+
+
+export const fetchMessagesV1 = async (getData) => {
+    const response = await axios.get(`${localUrl}${MessageApiVersion}/${getData.chatId}`, headerData);
+    if (!response.statusText === "OK") {
+        throw new Error("Something is wrong.");
+    }
+    return response.data;
+}
+
+
+
+
+
+
 
 
 
