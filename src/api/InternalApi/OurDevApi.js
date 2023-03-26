@@ -23,7 +23,7 @@ const headerData =
 //////-------------------------------///////////
 
 export const userCreateAccount = async (getData) => {
-    const response = await axios.post(`${localUrl}${UserApiVersion}/`, getData, headerData);
+    const response = await axios.post(`${devURL}${UserApiVersion}/`, getData, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -35,7 +35,7 @@ export const userCreateAccount = async (getData) => {
 ///////-----------------------------///////////
 
 export const userLoginAccount = async (getData) => {
-    const response = await axios.post(`${localUrl}${UserApiVersion}/login`, getData, headerData);
+    const response = await axios.post(`${devURL}${UserApiVersion}/login`, getData, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -49,7 +49,7 @@ export const userLoginAccount = async (getData) => {
 
 export const searchUserV1 = async (getData) => {
 
-    const response = await axios.get(`${localUrl}${UserApiVersion}/?search=${getData.search}`, headerData);
+    const response = await axios.get(`${devURL}${UserApiVersion}/?search=${getData.search}`, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -62,7 +62,7 @@ export const searchUserV1 = async (getData) => {
 ///////////------------------------////////////
 
 export const SingleUserchatAccess = async (getData) => {
-    const response = await axios.post(`${localUrl}${ChatApiVersion}`, getData, headerData);
+    const response = await axios.post(`${devURL}${ChatApiVersion}`, getData, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -75,7 +75,7 @@ export const SingleUserchatAccess = async (getData) => {
 //////////-------------------------------////////
 
 export const fetchAllChatSingleUserOrGroup = async (getData) => {
-    const response = await axios.get(`${localUrl}${ChatApiVersion}`, headerData);
+    const response = await axios.get(`${devURL}${ChatApiVersion}`, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -85,7 +85,7 @@ export const fetchAllChatSingleUserOrGroup = async (getData) => {
 
 
 export const createGroupChat = async (getData) => {
-    const response = await axios.post(`${localUrl}${ChatApiVersion}/group`, getData, headerData);
+    const response = await axios.post(`${devURL}${ChatApiVersion}/group`, getData, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -98,7 +98,7 @@ export const createGroupChat = async (getData) => {
 /////////////----------------------------///////////
 
 export const sendV1Message = async (getData) => {
-    const response = await axios.post(`${localUrl}${MessageApiVersion}`, getData, headerData);
+    const response = await axios.post(`${devURL}${MessageApiVersion}`, getData, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
@@ -107,7 +107,7 @@ export const sendV1Message = async (getData) => {
 
 
 export const fetchMessagesV1 = async (getData) => {
-    const response = await axios.get(`${localUrl}${MessageApiVersion}/${getData.chatId}`, headerData);
+    const response = await axios.get(`${devURL}${MessageApiVersion}/${getData.chatId}`, headerData);
     if (!response.statusText === "OK") {
         throw new Error("Something is wrong.");
     }
