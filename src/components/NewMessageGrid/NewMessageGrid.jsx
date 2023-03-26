@@ -1,5 +1,5 @@
 import { Box, Grid, Typography, Avatar, Stack, Button, TextField } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
 import {
@@ -17,12 +17,23 @@ import { ChatState } from '../../Context/ChatProvider';
 import { useMutation } from 'react-query';
 import { fetchAllChatSingleUserOrGroup, fetchChatSingleUserOrGroup, fetchMessagesV1, sendV1Message } from '../../api/InternalApi/OurDevApi';
 import { getSender } from '../../utils/chatLogic';
+import io from "socket.io-client";
+
+
+const ENDPOINT = "http://localhost:8000";
+var socket, selectedChatCompare;
 
 
 const NewMessageGrid = ({ selectedChannel }) => {
 
-    const location = useLocation();
 
+    const location = useLocation();
+    const [messages, setMessages] = useState([]);
+    const contentRef = useRef(null);
+    const [isTyping, setisTyping] = useState(false);
+    const [typing, setTyping] = useState(false);
+    ////// socket connection state
+    const [socketConnected, setSocketConnected] = useState(false);
     ////// use conetext use here
     const { user, setUser, selectChatV1, setSelectedChatV1, currentChats, setCurrentChats, chats, setChats } = ChatState();
     //////////// Store the userid of user ////////
@@ -35,6 +46,22 @@ const NewMessageGrid = ({ selectedChannel }) => {
     useEffect(() => {
         setActiveChannel(selectedChannel);
     }, [selectedChannel])
+
+
+
+    ///////// UseEffect for socket io
+    useEffect(() => {
+        //////// Here we are check the login user status
+        socket = io(ENDPOINT);
+        socket.emit("setup", user);
+        socket.on("connected", () => setSocketConnected(true));
+        socket.on("typing", () => setisTyping(true));
+        socket.on("stop typing", () => setisTyping(false));
+    }, []);
+
+
+
+
 
     //////////When this page render then user_id store , nad channel list also load
     useEffect(() => {
@@ -63,19 +90,19 @@ const NewMessageGrid = ({ selectedChannel }) => {
         })
     }
 
-    useEffect(() => {
-        console.log("messageInterval val", messageInterval)
-        if ((Object.keys(ActiveChannel).length > 0) && (location.pathname === "/")) {/////Here we are check object is empty or not
-            clearInterval(messageInterval);
-            setAllMessgesOfChannel([]);
-            setmessageInterval(setInterval(() => {
-                GetMessagesListOnEverySec(ActiveChannel, UserId);
-            }, [3000]))
-            console.log("messageInterval", messageInterval);
-        } else {
-            clearInterval(messageInterval);
-        }
-    }, [ActiveChannel, location])
+    // useEffect(() => {
+    //     console.log("messageInterval val", messageInterval)
+    //     if ((Object.keys(ActiveChannel).length > 0) && (location.pathname === "/")) {/////Here we are check object is empty or not
+    //         clearInterval(messageInterval);
+    //         setAllMessgesOfChannel([]);
+    //         setmessageInterval(setInterval(() => {
+    //             GetMessagesListOnEverySec(ActiveChannel, UserId);
+    //         }, [3000]))
+    //         console.log("messageInterval", messageInterval);
+    //     } else {
+    //         clearInterval(messageInterval);
+    //     }
+    // }, [ActiveChannel, location])
 
 
     const cssStyle = {
@@ -104,7 +131,7 @@ const NewMessageGrid = ({ selectedChannel }) => {
             }
         },
         sendMessIcon: {
-            position: "absolute", right: "28px", top: "14px", fontSize: "28px", backgroundColor: "#333333", borderRadius: "25px", padding: "5px", color: "#fff", cursor: "pointer"
+            position: "absolute", right: "5px", top: "4px", fontSize: "28px", backgroundColor: "#333333", borderRadius: "25px", padding: "5px", color: "#fff", cursor: "pointer"
         },
         messageBoxCon: {
             backgroundColor: "#ffffff",
@@ -149,6 +176,27 @@ const NewMessageGrid = ({ selectedChannel }) => {
 
     const setNewMessaageFun = (event) => {
         setNewMessage(event.target.value);
+
+        /////// three dot show when typing start
+        if (!socketConnected) return;
+
+        if (!typing) {
+            setTyping(true);
+            socket.emit("typing", selectChatV1._id);
+        }
+
+        let lastTypingTime = new Date().getTime();
+        var timerLength = 3000;
+        setTimeout(() => {
+            var timeNow = new Date().getTime();
+            var timeDiff = timeNow - lastTypingTime;
+            if (timeDiff >= timerLength && typing) {
+                socket.emit("stop typing", selectChatV1._id);
+                setTyping(false);
+                setisTyping(false);
+            }
+        }, timerLength)
+
     }
 
     ////////// Send message here //////
@@ -170,6 +218,7 @@ const NewMessageGrid = ({ selectedChannel }) => {
     ////////// send message in new version //////
     const { mutateAsync: sendingMessageV1 } = useMutation(sendV1Message);
     const sendMessagev1 = async (message) => {
+        socket.emit("stop typing", selectChatV1._id)
         try {
             const sendingMessData = {
                 content: message,
@@ -178,11 +227,29 @@ const NewMessageGrid = ({ selectedChannel }) => {
             setNewMessage("");
             const response = await sendingMessageV1(sendingMessData);
             setCurrentChats([...currentChats, response])
-            fetchAllMessV1(selectChatV1._id);
+
+            //setMessages([...messages, response]);
+            //fetchAllMessV1(selectChatV1._id);
+            socket.emit("new message", response);
+
         } catch (error) {
             console.log(error.response);
         }
     }
+
+    useEffect(() => {
+        socket.on("message recived", (newMessageRecived) => {
+            if (!selectedChatCompare || selectedChatCompare._id !== newMessageRecived.chat._id) {
+                //give notification
+            } else {
+                console.log("send message and recove message test", [...currentChats, newMessageRecived]);
+                setCurrentChats([...currentChats, newMessageRecived]);
+                //setMessages([...messages, newMessageRecived]);
+
+            }
+        })
+    })
+
 
     const handleEnterKeyPress = (event) => {
         if (event.key === 'Enter') {
@@ -194,13 +261,21 @@ const NewMessageGrid = ({ selectedChannel }) => {
         }
     };
 
+    const clickSendMessButton = () => {
+        if (newMessage !== "") {
+            sendMessagev1(newMessage);
+        }
+    }
+
 
     /////////////// fetch message of chats in  new version /////////////
     const { mutateAsync: fetchingAllMess } = useMutation(fetchMessagesV1);
     const fetchAllMessV1 = async (chatId) => {
         try {
             const response = await fetchingAllMess({ chatId });
-            setCurrentChats([response])
+            console.log("respone fetch data", response)
+            setCurrentChats(response)
+            socket.emit("join chat", chatId)
         } catch (error) {
             console.log(error.response);
         }
@@ -221,9 +296,19 @@ const NewMessageGrid = ({ selectedChannel }) => {
             setMyActiveChat(selectChatV1)
             setCurrentChats([]);
             fetchAllMessV1(selectChatV1._id)
-            console.log(user._id);
+            selectedChatCompare = selectChatV1;
         }
     }, [selectChatV1._id])
+
+    /////// sccrollbard automatic movein bottom place
+    useEffect(() => {
+        const contentElement = contentRef.current;
+        if (contentElement) {
+            contentElement.scrollTop = contentElement.scrollHeight;
+        }
+
+    }, [currentChats])
+
 
 
 
@@ -267,7 +352,16 @@ const NewMessageGrid = ({ selectedChannel }) => {
 
             </Box>
             <Box container position={'relative'} id="NewMessageBox" sx={cssStyle.firstBoxMessage}>
-                <Box container position={'absolute'} sx={cssStyle.messageBoxCon} pt={"40px"} pb={"30px"} mt={"0px"} px={"20px"}>
+                <Box
+                    container
+                    position={'absolute'}
+                    sx={cssStyle.messageBoxCon}
+                    pt={"40px"}
+                    pb={"30px"}
+                    mt={"0px"}
+                    px={"20px"}
+                    ref={contentRef}
+                >
                     {
                         /* 
                         {AllMessagesChannel.length !== 0 &&
@@ -344,8 +438,7 @@ const NewMessageGrid = ({ selectedChannel }) => {
 
                     {currentChats.length > 0 &&
                         <>
-
-                            {currentChats[0].map((mes, index) => {
+                            {currentChats.map((mes, index) => {
 
                                 if (mes.sender._id !== user._id) {
                                     return <Grid
@@ -397,6 +490,7 @@ const NewMessageGrid = ({ selectedChannel }) => {
                                         container
                                         spacing={5}
                                         key={`mess_sender_${index}`}
+
                                     >
                                         <Grid item id="empty_sender_mess_grid" display={{ xs: "none", md: "block" }} xs={12} md={6}>
                                         </Grid>
@@ -431,14 +525,16 @@ const NewMessageGrid = ({ selectedChannel }) => {
 
                 </Box>
                 <Box position={'absolute'} sx={{ width: "100%", bottom: "0px", backgroundColor: "#ffffff" }} py={"10px"} container px={"25px"}>
+                    {isTyping ? <Box sx={{ fontSize: "15px", marginLeft: "10px" }}>Typing...</Box> : <Box></Box>}
                     <Box container
                         sx={{
                             width: '100%',
+                            position: 'relative'
                         }}
                     >
                         <TextField
                             size='small'
-                            sx={cssStyle.sendMessInput}
+                            sx={{ ...cssStyle.sendMessInput, position: "absolute" }}
                             fullWidth
                             placeholder='Type a message'
                             id="messageInput"
@@ -447,8 +543,8 @@ const NewMessageGrid = ({ selectedChannel }) => {
                             onKeyPress={handleEnterKeyPress}
 
                         />
-                        <AttachFileIcon sx={{ ...cssStyle.sendMessIcon, right: "60px", backgroundColor: "#fff", color: "#333" }} />
-                        <SendIcon sx={cssStyle.sendMessIcon} />
+                        <AttachFileIcon sx={{ ...cssStyle.sendMessIcon, right: "35px", backgroundColor: "#fff", color: "#333" }} />
+                        <SendIcon onClick={() => clickSendMessButton()} sx={cssStyle.sendMessIcon} />
                     </Box>
                 </Box>
             </Box>

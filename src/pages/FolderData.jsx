@@ -123,7 +123,6 @@ const FolderData = () => {
     const [debouncedSearchTerm] = useDebounce(srcFolderText, 500);
     useEffect(() => {
         if (debouncedSearchTerm !== "") {
-            console.log(debouncedSearchTerm);
             const searchingFiles = folderDataStore.filter((srcFolders) => srcFolders.folderName.toLowerCase().startsWith(debouncedSearchTerm.toLowerCase()));
             setFoldersData(searchingFiles);
         } else {

@@ -331,20 +331,21 @@ const LeftSideBar = (props) => {
     }
 
     /////// run first time and get the channel list and store it
-    useEffect(() => {
-        if ((UserId !== "") && (location.pathname === "/")) {
-            clearInterval(ChannelInterval);
-            setChannelList([]);
-            setChannelInterval(setInterval(() => {
-                channelListFunction(UserId);
-            }, [3000]))
-        } else {
-            if (UserId !== "") {
-                clearInterval(ChannelInterval);
-                channelListFunction(UserId);
-            }
-        }
-    }, [UserId, location])
+
+    // useEffect(() => {
+    //     if ((UserId !== "") && (location.pathname === "/")) {
+    //         clearInterval(ChannelInterval);
+    //         setChannelList([]);
+    //         setChannelInterval(setInterval(() => {
+    //             channelListFunction(UserId);
+    //         }, [3000]))
+    //     } else {
+    //         if (UserId !== "") {
+    //             clearInterval(ChannelInterval);
+    //             channelListFunction(UserId);
+    //         }
+    //     }
+    // }, [UserId, location])
 
     //////// useLocation Check and update the state according to left sidebar options 
     useEffect(() => {
@@ -663,7 +664,7 @@ const LeftSideBar = (props) => {
                                         <ListItemText
                                             primary={
                                                 Object.keys(d).length > 0 &&
-                                                (!d?.isGroupChat && getSender(user, d.users) )
+                                                (!d?.isGroupChat && getSender(user, d.users))
                                             }
                                             sx={{
                                                 opacity: open ? 1 : 0, marginTop: "4px",

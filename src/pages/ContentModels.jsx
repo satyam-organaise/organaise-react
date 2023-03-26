@@ -405,7 +405,6 @@ const ContentModels = ({
         try {
             const response = await creatSingleMemChatV1({ userId: selectUserIdMem });
             if (response) {
-                console.log("chat created successfully");
                 setSelectedChatV1(response);
                 InanotherPage("1", response)
                 handleClose();

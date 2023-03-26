@@ -52,7 +52,6 @@ const CompanyDetails = () => {
         const UserId = JSON.parse(localStorage.getItem("UserData")).sub;
         try {
             const response = await postCompannyName({ userId: UserId, companyName: companyName })
-            console.log(response);
             if (response.status) {
                 toast.success(response.message);
                 setTimeout(() => {
