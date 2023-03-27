@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/static/css/main.0d28668d.css",
+    "main.js": "/static/js/main.d99de073.js",
+    "static/js/787.23fd1149.chunk.js": "/static/js/787.23fd1149.chunk.js",
+    "static/media/loginBackGroundImg.png": "/static/media/loginBackGroundImg.3793d038c0fbb7544126.png",
+    "static/media/signupBackgroundImg.png": "/static/media/signupBackgroundImg.fa2f1a21ce7612bf29c8.png",
+    "static/media/forgetPasswordBgImg.png": "/static/media/forgetPasswordBgImg.71ec09b7f1fd3be485dc.png",
+    "static/media/otpVerificationBgImg.png": "/static/media/otpVerificationBgImg.9d2fdbef4036499f1234.png",
+    "static/media/create-channel-homepage.png": "/static/media/create-channel-homepage.0481c1982e3d882b709c.png",
+    "static/media/folder-data.png": "/static/media/folder-data.4366533c7d5130a8260b.png",
+    "static/media/upload-file.png": "/static/media/upload-file.f16e498cc04c93b65a25.png",
+    "static/media/organaise-logo.png": "/static/media/organaise-logo.9f848e731ef60aaca475.png",
+    "index.html": "/index.html",
+    "static/media/success.svg": "/static/media/success.90fbb84f38f690729f9359479994d9d0.svg",
+    "main.0d28668d.css.map": "/static/css/main.0d28668d.css.map",
+    "main.d99de073.js.map": "/static/js/main.d99de073.js.map",
+    "787.23fd1149.chunk.js.map": "/static/js/787.23fd1149.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0d28668d.css",
+    "static/js/main.d99de073.js"
+  ]
+}
