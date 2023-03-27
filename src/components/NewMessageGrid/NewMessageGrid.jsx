@@ -20,10 +20,10 @@ import { getSender } from '../../utils/chatLogic';
 import io from "socket.io-client";
 
 
-const ENDPOINT = "http://localhost:8000"
+const ENDPOINT = "https://devorganaise.com/"
 //"https://devorganaise.com"
 //"http://13.56.89.225:8000/"
-//;
+
 var socket, selectedChatCompare;
 
 const NewMessageGrid = ({ selectedChannel }) => {
