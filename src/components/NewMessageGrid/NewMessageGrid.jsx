@@ -20,7 +20,7 @@ import { getSender } from '../../utils/chatLogic';
 import io from "socket.io-client";
 
 
-const ENDPOINT = "https://devorganaise.com/api"
+const ENDPOINT = "http://13.56.89.225:8000"
 // "http://localhost:8000";
 var socket, selectedChatCompare;
 
